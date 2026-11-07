@@ -27,9 +27,12 @@ import {
 import { RoomItem, BedItem } from "../lib/mock-data";
 
 export default function ShowcasePage() {
-  const { language } = useApp();
+  const { language, floors } = useApp();
   const [selectedRoomForBooking, setSelectedRoomForBooking] = useState<RoomItem | null>(null);
   const [selectedBedForBooking, setSelectedBedForBooking] = useState<BedItem | null>(null);
+
+  const totalChambers = floors.reduce((acc, f) => acc + f.rooms.length, 0);
+  const totalCapacity = floors.reduce((acc, f) => acc + f.rooms.reduce((bAcc, r) => bAcc + r.beds.length, 0), 0);
 
   const handleSelectBed = (room: RoomItem, bed: BedItem) => {
     setSelectedRoomForBooking(room);
@@ -130,13 +133,19 @@ export default function ShowcasePage() {
         <div className="mt-10 grid grid-cols-2 md:grid-cols-4 gap-4 pt-6 border-t border-slate-200">
           <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-xs">
             <span className="text-xs font-medium text-slate-500">Total Chambers</span>
-            <p className="text-2xl font-bold text-slate-900 mt-1 tabular-nums">24</p>
-            <p className="text-xs text-slate-500 mt-0.5">Single, Double &amp; Triple</p>
+            <p className="text-2xl font-bold text-slate-900 mt-1 tabular-nums">
+              {totalChambers > 0 ? totalChambers : "Open"}
+            </p>
+            <p className="text-xs text-slate-500 mt-0.5">
+              {totalChambers > 0 ? "Single, Double & Triple" : "Ready for Allocation"}
+            </p>
           </div>
 
           <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-xs">
             <span className="text-xs font-medium text-slate-500">Student Capacity</span>
-            <p className="text-2xl font-bold text-slate-900 mt-1 tabular-nums">58 Beds</p>
+            <p className="text-2xl font-bold text-slate-900 mt-1 tabular-nums">
+              {totalCapacity > 0 ? `${totalCapacity} Beds` : "Active"}
+            </p>
             <p className="text-xs text-slate-500 mt-0.5">Gulberg Main Campus</p>
           </div>
 

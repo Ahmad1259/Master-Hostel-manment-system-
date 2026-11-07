@@ -321,29 +321,61 @@ export default function ComplaintsPage() {
             <form onSubmit={handleRaiseSubmit} className="space-y-4 text-xs">
               <div>
                 <label className="block font-semibold text-slate-700 mb-1">
-                  Reporting Resident *
+                  Reporting Resident / Reporter *
                 </label>
-                <select
-                  value={newComplaint.studentId}
-                  onChange={(e) => {
-                    const std = students.find((s) => s.id === e.target.value);
-                    if (std) {
-                      setNewComplaint({
-                        ...newComplaint,
-                        studentId: std.id,
-                        studentName: std.name,
-                        roomNumber: std.roomNumber,
-                      });
-                    }
-                  }}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
-                >
-                  {students.map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.name} (Room {s.roomNumber})
-                    </option>
-                  ))}
-                </select>
+                {students.length === 0 ? (
+                  <div className="grid grid-cols-2 gap-2">
+                    <input
+                      type="text"
+                      required
+                      placeholder="Reporter / Resident name"
+                      value={newComplaint.studentName}
+                      onChange={(e) =>
+                        setNewComplaint({
+                          ...newComplaint,
+                          studentName: e.target.value,
+                          studentId: `walkin-${Date.now()}`,
+                        })
+                      }
+                      className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                    />
+                    <input
+                      type="text"
+                      required
+                      placeholder="Room # (e.g. 101)"
+                      value={newComplaint.roomNumber}
+                      onChange={(e) =>
+                        setNewComplaint({
+                          ...newComplaint,
+                          roomNumber: e.target.value,
+                        })
+                      }
+                      className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                    />
+                  </div>
+                ) : (
+                  <select
+                    value={newComplaint.studentId}
+                    onChange={(e) => {
+                      const std = students.find((s) => s.id === e.target.value);
+                      if (std) {
+                        setNewComplaint({
+                          ...newComplaint,
+                          studentId: std.id,
+                          studentName: std.name,
+                          roomNumber: std.roomNumber,
+                        });
+                      }
+                    }}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                  >
+                    {students.map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.name} (Room {s.roomNumber})
+                      </option>
+                    ))}
+                  </select>
+                )}
               </div>
 
               <div className="grid grid-cols-2 gap-3">

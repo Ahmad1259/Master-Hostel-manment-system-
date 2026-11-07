@@ -345,28 +345,45 @@ export default function VisitorsPage() {
 
               <div>
                 <label className="block font-semibold text-slate-700 mb-1">
-                  Resident to Visit *
+                  Resident to Visit / Purpose *
                 </label>
-                <select
-                  value={newVisitor.studentId}
-                  onChange={(e) => {
-                    const std = students.find((s) => s.id === e.target.value);
-                    if (std) {
+                {students.length === 0 ? (
+                  <input
+                    type="text"
+                    required
+                    placeholder="Resident Name or Room # to visit"
+                    value={newVisitor.studentName}
+                    onChange={(e) =>
                       setNewVisitor({
                         ...newVisitor,
-                        studentId: std.id,
-                        studentName: `${std.name} (Room ${std.roomNumber})`,
-                      });
+                        studentName: e.target.value,
+                        studentId: `visit-${Date.now()}`,
+                      })
                     }
-                  }}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
-                >
-                  {students.map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.name} (Room {s.roomNumber})
-                    </option>
-                  ))}
-                </select>
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                  />
+                ) : (
+                  <select
+                    value={newVisitor.studentId}
+                    onChange={(e) => {
+                      const std = students.find((s) => s.id === e.target.value);
+                      if (std) {
+                        setNewVisitor({
+                          ...newVisitor,
+                          studentId: std.id,
+                          studentName: `${std.name} (Room ${std.roomNumber})`,
+                        });
+                      }
+                    }}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                  >
+                    {students.map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.name} (Room {s.roomNumber})
+                      </option>
+                    ))}
+                  </select>
+                )}
               </div>
 
               <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-100">

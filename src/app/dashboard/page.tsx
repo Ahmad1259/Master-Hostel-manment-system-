@@ -199,34 +199,44 @@ export default function DashboardOverviewPage() {
           </div>
 
           <div className="space-y-4 pt-2">
-            {floors.map((floor) => {
-              let fCapacity = 0;
-              let fOccupied = 0;
-              floor.rooms.forEach((r) => {
-                fCapacity += r.capacity;
-                fOccupied += r.beds.filter((b) => b.status === "OCCUPIED").length;
-              });
-              const pct = fCapacity > 0 ? Math.round((fOccupied / fCapacity) * 100) : 0;
+            {floors.every((f) => f.rooms.length === 0) ? (
+              <div className="py-8 text-center text-slate-500 bg-slate-50/50 rounded-lg border border-slate-100">
+                <Building2 className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+                <p className="font-semibold text-slate-700 text-sm">No chambers configured yet</p>
+                <p className="text-slate-400 text-xs mt-0.5">
+                  Use the Inventory manager or Onboarding Wizard to create rooms and beds.
+                </p>
+              </div>
+            ) : (
+              floors.map((floor) => {
+                let fCapacity = 0;
+                let fOccupied = 0;
+                floor.rooms.forEach((r) => {
+                  fCapacity += r.capacity;
+                  fOccupied += r.beds.filter((b) => b.status === "OCCUPIED").length;
+                });
+                const pct = fCapacity > 0 ? Math.round((fOccupied / fCapacity) * 100) : 0;
 
-              return (
-                <div key={floor.id} className="p-3.5 border border-slate-100 rounded-lg bg-slate-50/50 space-y-2">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="font-bold text-slate-900">
-                      {floor.name} ({floor.nameUrdu})
-                    </span>
-                    <span className="text-slate-600 tabular-nums">
-                      <strong>{fOccupied}</strong> of {fCapacity} Beds Occupied ({pct}%)
-                    </span>
+                return (
+                  <div key={floor.id} className="p-3.5 border border-slate-100 rounded-lg bg-slate-50/50 space-y-2">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="font-bold text-slate-900">
+                        {floor.name} ({floor.nameUrdu})
+                      </span>
+                      <span className="text-slate-600 tabular-nums">
+                        <strong>{fOccupied}</strong> of {fCapacity} Beds Occupied ({pct}%)
+                      </span>
+                    </div>
+                    <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
+                      <div
+                        className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                        style={{ width: `${pct}%` }}
+                      />
+                    </div>
                   </div>
-                  <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
-                    <div
-                      className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                      style={{ width: `${pct}%` }}
-                    />
-                  </div>
-                </div>
-              );
-            })}
+                );
+              })
+            )}
           </div>
         </div>
 
@@ -321,34 +331,46 @@ export default function DashboardOverviewPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {feeInvoices.slice(0, 5).map((inv) => (
-                <tr key={inv.id} className="hover:bg-slate-50/60 transition-colors">
-                  <td className="px-4 py-3 font-semibold text-slate-900">
-                    {inv.studentName}
-                  </td>
-                  <td className="px-4 py-3 text-slate-600">Room {inv.roomNumber}</td>
-                  <td className="px-4 py-3 text-slate-600">{inv.month} {inv.year}</td>
-                  <td className="px-4 py-3 text-right font-mono font-bold text-slate-900 tabular-nums">
-                    {formatCurrency(inv.totalDue)}
-                  </td>
-                  <td className="px-4 py-3 text-right font-mono font-bold text-amber-600 tabular-nums">
-                    {formatCurrency(inv.balanceDues)}
-                  </td>
-                  <td className="px-4 py-3 text-center">
-                    <span
-                      className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                        inv.status === "PAID"
-                          ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                          : inv.status === "PARTIAL"
-                          ? "bg-amber-50 text-amber-700 border border-amber-200"
-                          : "bg-red-50 text-red-700 border border-red-200"
-                      }`}
-                    >
-                      {inv.status}
-                    </span>
+              {feeInvoices.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="px-4 py-8 text-center text-slate-500">
+                    <Receipt className="w-7 h-7 text-slate-300 mx-auto mb-2" />
+                    <p className="font-semibold text-slate-700 text-xs">No invoices or billing activity recorded yet</p>
+                    <p className="text-slate-400 text-[11px] mt-0.5">
+                      Generate monthly student dues or record a new rent receipt to populate this ledger.
+                    </p>
                   </td>
                 </tr>
-              ))}
+              ) : (
+                feeInvoices.slice(0, 5).map((inv) => (
+                  <tr key={inv.id} className="hover:bg-slate-50/60 transition-colors">
+                    <td className="px-4 py-3 font-semibold text-slate-900">
+                      {inv.studentName}
+                    </td>
+                    <td className="px-4 py-3 text-slate-600">Room {inv.roomNumber}</td>
+                    <td className="px-4 py-3 text-slate-600">{inv.month} {inv.year}</td>
+                    <td className="px-4 py-3 text-right font-mono font-bold text-slate-900 tabular-nums">
+                      {formatCurrency(inv.totalDue)}
+                    </td>
+                    <td className="px-4 py-3 text-right font-mono font-bold text-amber-600 tabular-nums">
+                      {formatCurrency(inv.balanceDues)}
+                    </td>
+                    <td className="px-4 py-3 text-center">
+                      <span
+                        className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                          inv.status === "PAID"
+                            ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                            : inv.status === "PARTIAL"
+                            ? "bg-amber-50 text-amber-700 border border-amber-200"
+                            : "bg-red-50 text-red-700 border border-red-200"
+                        }`}
+                      >
+                        {inv.status}
+                      </span>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>

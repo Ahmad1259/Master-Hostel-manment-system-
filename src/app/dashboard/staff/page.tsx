@@ -156,7 +156,16 @@ export default function StaffPage() {
 
       {/* Staff Roster Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-        {filteredStaff.map((member) => {
+        {filteredStaff.length === 0 ? (
+          <div className="col-span-full bg-white border border-slate-200 rounded-xl p-12 text-center text-slate-500 shadow-xs">
+            <Users className="w-10 h-10 text-slate-300 mx-auto mb-3" />
+            <p className="text-base font-bold text-slate-900">No personnel registered</p>
+            <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
+              Staff members (Warden, Cook, Cleaner, Security) will appear here for daily attendance tracking and salary disbursement.
+            </p>
+          </div>
+        ) : (
+          filteredStaff.map((member) => {
           const Icon = getRoleIcon(member.role);
           const isPaid = member.lastSalaryStatus === "PAID";
           const isPresent = member.attendanceToday === "PRESENT";
@@ -239,7 +248,7 @@ export default function StaffPage() {
               </div>
             </div>
           );
-        })}
+        }))}
       </div>
 
       {/* Salary Slip Modal */}

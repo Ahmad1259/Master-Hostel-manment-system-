@@ -156,37 +156,49 @@ export default function ReferralsPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 font-medium">
-              {referrals.map((item) => (
-                <tr key={item.id} className="hover:bg-slate-50/60">
-                  <td className="px-4 py-3 font-bold text-slate-900">
-                    {item.hostelName}
-                  </td>
-                  <td className="px-4 py-3 text-slate-700">
-                    <span>{item.ownerName}</span>
-                    <span className="text-[11px] text-slate-400 block font-mono">{item.contact}</span>
-                  </td>
-                  <td className="px-4 py-3 text-slate-600">{item.city}</td>
-                  <td className="px-4 py-3 font-mono text-slate-600 tabular-nums">
-                    {item.signupDate}
-                  </td>
-                  <td className="px-4 py-3 text-right font-mono font-bold text-slate-900 tabular-nums">
-                    {formatCurrency(item.rewardAmount)}
-                  </td>
-                  <td className="px-4 py-3 text-center">
-                    <span
-                      className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                        item.status === "PAID"
-                          ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                          : item.status === "ACTIVE"
-                          ? "bg-blue-50 text-blue-700 border border-blue-200"
-                          : "bg-amber-50 text-amber-700 border border-amber-200"
-                      }`}
-                    >
-                      {item.status}
-                    </span>
+              {referrals.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="py-12 px-4 text-center text-slate-500">
+                    <Gift className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+                    <p className="text-sm font-semibold text-slate-800">No partner referrals yet</p>
+                    <p className="text-xs text-slate-500 mt-1">
+                      Share your unique referral link above with fellow hostel owners to earn Rs 10,000 cash reward per onboarded property.
+                    </p>
                   </td>
                 </tr>
-              ))}
+              ) : (
+                referrals.map((item) => (
+                  <tr key={item.id} className="hover:bg-slate-50/60">
+                    <td className="px-4 py-3 font-bold text-slate-900">
+                      {item.hostelName}
+                    </td>
+                    <td className="px-4 py-3 text-slate-700">
+                      <span>{item.ownerName}</span>
+                      <span className="text-[11px] text-slate-400 block font-mono">{item.contact}</span>
+                    </td>
+                    <td className="px-4 py-3 text-slate-600">{item.city}</td>
+                    <td className="px-4 py-3 font-mono text-slate-600 tabular-nums">
+                      {item.signupDate}
+                    </td>
+                    <td className="px-4 py-3 text-right font-mono font-bold text-slate-900 tabular-nums">
+                      {formatCurrency(item.rewardAmount)}
+                    </td>
+                    <td className="px-4 py-3 text-center">
+                      <span
+                        className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                          item.status === "PAID"
+                            ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                            : item.status === "ACTIVE"
+                            ? "bg-blue-50 text-blue-700 border border-blue-200"
+                            : "bg-amber-50 text-amber-700 border border-amber-200"
+                        }`}
+                      >
+                        {item.status}
+                      </span>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>

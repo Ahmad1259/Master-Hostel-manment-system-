@@ -1,0 +1,259 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Property {
+  id              String             @id @default(uuid())
+  name            String
+  city            String
+  address         String
+  phone           String
+  logo            String?
+  currency        String             @default("PKR")
+  floors          Floor[]
+  users           User[]
+  staff           Staff[]
+  expenses        Expense[]
+  auxiliaryIncome AuxiliaryIncome[]
+  partners        Partner[]
+  visitors        Visitor[]
+  inquiries       Inquiry[]
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+}
+
+model StaffRolePermission {
+  id                String   @id @default(uuid())
+  staffId           String   @unique
+  staff             Staff    @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  canManageFees     Boolean  @default(false)
+  canManageRooms    Boolean  @default(false)
+  canManageExpenses Boolean  @default(false)
+  canManageStaff    Boolean  @default(false)
+}
+
+model User {
+  id               String          @id @default(uuid())
+  propertyId       String
+  property         Property        @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  name             String
+  email            String          @unique
+  phone            String
+  role             String          @default("STUDENT") // SUPERADMIN, ADMIN, WARDEN, ACCOUNTANT, STUDENT
+  isEnrolled       Boolean         @default(true)
+  twoFactorSecret  String?
+  studentProfile   StudentProfile?
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+}
+
+model Floor {
+  id          String   @id @default(uuid())
+  propertyId  String
+  property    Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  floorNumber Int
+  name        String
+  rooms       Room[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Room {
+  id          String   @id @default(uuid())
+  floorId     String
+  floor       Floor    @relation(fields: [floorId], references: [id], onDelete: Cascade)
+  roomNumber  String
+  capacity    Int      @default(2)
+  monthlyRate Float
+  type        String   @default("DOUBLE") // SINGLE, DOUBLE, TRIPLE, DORMITORY
+  beds        Bed[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Bed {
+  id         String          @id @default(uuid())
+  roomId     String
+  room       Room            @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  bedLabel   String
+  status     String          @default("AVAILABLE") // AVAILABLE, OCCUPIED, RESERVED
+  studentId  String?
+  student    StudentProfile? @relation(fields: [studentId], references: [id])
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
+}
+
+model StudentProfile {
+  id             String          @id @default(uuid())
+  userId         String          @unique
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fatherName     String
+  cnic           String          @unique
+  guardianPhone  String
+  institution    String
+  admissionDate  DateTime        @default(now())
+  leavingDate    DateTime?
+  photoUrl       String?
+  status         String          @default("ACTIVE") // ACTIVE, INACTIVE, ALUMNI
+  beds           Bed[]
+  invoices       FeeInvoice[]
+  visitors       Visitor[]
+  laundryRecords LaundryRecord[]
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+}
+
+model FeeInvoice {
+  id          String         @id @default(uuid())
+  studentId   String
+  student     StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  month       String         // e.g., "November"
+  year        Int            // e.g., 2026
+  amount      Float
+  discount    Float          @default(0)
+  arrears     Float          @default(0)
+  totalDue    Float
+  paidAmount  Float          @default(0)
+  balanceDues Float          @default(0)
+  status      String         @default("UNPAID") // PAID, PARTIAL, UNPAID
+  receiptUrl  String?
+  dueDate     DateTime
+  note        String?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+}
+
+model Staff {
+  id            String               @id @default(uuid())
+  propertyId    String
+  property      Property             @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  name          String
+  role          String               // Cook, Cleaner, Warden, Guard, Accountant, Manager
+  monthlySalary Float
+  phone         String
+  joiningDate   DateTime             @default(now())
+  permissions   StaffRolePermission?
+  salarySlips   SalarySlip[]
+  attendance    AttendanceRecord[]
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
+}
+
+model SalarySlip {
+  id          String   @id @default(uuid())
+  staffId     String
+  staff       Staff    @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  month       String
+  year        Int
+  baseSalary  Float
+  bonus       Float    @default(0)
+  deductions  Float    @default(0)
+  paidAmount  Float
+  status      String   @default("PAID") // PAID, PENDING, PARTIAL
+  paymentDate DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model AttendanceRecord {
+  id        String   @id @default(uuid())
+  staffId   String
+  staff     Staff    @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  date      DateTime @default(now())
+  status    String   @default("PRESENT") // PRESENT, ABSENT, LEAVE, LATE
+  checkIn   String?
+  checkOut  String?
+  createdAt DateTime @default(now())
+}
+
+model Expense {
+  id          String   @id @default(uuid())
+  propertyId  String
+  property    Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  category    String   // Rent, Electricity, Gas, Water, Groceries, Repairs, Internet, Other
+  title       String
+  amount      Float
+  date        DateTime @default(now())
+  status      String   @default("PAID") // PAID, UNPAID
+  receiptUrl  String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model AuxiliaryIncome {
+  id         String   @id @default(uuid())
+  propertyId String
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  source     String   // LAUNDRY, TUCK_SHOP, VENDING, LOCKER_RENT, OTHER
+  amount     Float
+  date       DateTime @default(now())
+  note       String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model Partner {
+  id              String   @id @default(uuid())
+  propertyId      String
+  property        Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  name            String
+  sharePercentage Float
+  totalInvested   Float
+  totalWithdrawn  Float    @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model Visitor {
+  id          String          @id @default(uuid())
+  propertyId  String
+  property    Property        @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  studentId   String?
+  student     StudentProfile? @relation(fields: [studentId], references: [id])
+  visitorName String
+  cnic        String
+  phone       String?
+  checkIn     DateTime        @default(now())
+  checkOut    DateTime?
+  charges     Float           @default(0)
+  status      String          @default("CHECKED_IN") // CHECKED_IN, CHECKED_OUT
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+}
+
+model LaundryRecord {
+  id              String         @id @default(uuid())
+  studentId       String
+  student         StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  piecesSubmitted Int
+  submittedDate   DateTime       @default(now())
+  returnedDate    DateTime?
+  status          String         @default("IN_PROCESS") // IN_PROCESS, READY, RETURNED
+  notes           String?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+}
+
+model Inquiry {
+  id             String    @id @default(uuid())
+  propertyId     String
+  property       Property  @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  fullName       String
+  email          String
+  phone          String
+  preferredRoom  String    // Single, Double, Triple
+  plannedDate    DateTime?
+  institution    String?
+  message        String?
+  status         String    @default("PENDING") // PENDING, CONTACTED, RESERVED, CANCELLED
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+}

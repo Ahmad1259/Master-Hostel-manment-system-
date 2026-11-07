@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <rect width="512" height="512" fill="#FAF9F6" />
+  <rect x="24" y="24" width="464" height="464" fill="none" stroke="#E4E4E7" stroke-width="2" />
+  <rect x="36" y="36" width="440" height="440" fill="none" stroke="#B58544" stroke-width="2" stroke-dasharray="4 4" />
+  <g fill="none" stroke="#18181B" stroke-width="8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M190 180 C150 180, 120 210, 120 260 C120 310, 150 340, 190 340 C225 340, 245 315, 245 275 L185 275" />
+    <path d="M295 340 L295 180 L355 180 C382 180, 398 198, 398 225 C398 252, 382 270, 355 270 L295 270" />
+  </g>
+  <text x="256" y="415" text-anchor="middle" font-family="serif" font-size="24" letter-spacing="8" fill="#18181B">
+    THE GRAND PAVILION
+  </text>
+  <text x="256" y="445" text-anchor="middle" font-family="sans-serif" font-size="14" letter-spacing="4" fill="#71717A">
+    COMMERCIAL LIVING &amp; SCHOLARS RESIDENCY
+  </text>
+</svg>

@@ -1,16 +1,19 @@
-// Safe PWA Service Worker - Non-blocking, transparent pass-through
+// Self-unregistering Service Worker that deletes all caches and unregisters itself
 self.addEventListener("install", (e) => {
   self.skipWaiting();
 });
 
 self.addEventListener("activate", (e) => {
   e.waitUntil(
-    caches.keys().then((keys) => Promise.all(keys.map((k) => caches.delete(k))))
+    caches
+      .keys()
+      .then((keys) => Promise.all(keys.map((k) => caches.delete(k))))
+      .then(() => self.registration.unregister())
   );
   self.clients.claim();
 });
 
-// No fetch interception: always fetch live from network
-self.addEventListener("fetch", () => {
-  // Pass-through to browser default network handler
+// Pure pass-through fetch: never cache or intercept
+self.addEventListener("fetch", (event) => {
+  event.respondWith(fetch(event.request));
 });

@@ -1,44 +1,16 @@
-const CACHE_NAME = "grand-pavilion-v2";
-
-self.addEventListener("install", (event) => {
+// Safe PWA Service Worker - Non-blocking, transparent pass-through
+self.addEventListener("install", (e) => {
   self.skipWaiting();
 });
 
-self.addEventListener("activate", (event) => {
-  event.waitUntil(
-    caches.keys().then((keys) => {
-      return Promise.all(
-        keys.map((key) => caches.delete(key))
-      );
-    }).then(() => self.clients.claim())
+self.addEventListener("activate", (e) => {
+  e.waitUntil(
+    caches.keys().then((keys) => Promise.all(keys.map((k) => caches.delete(k))))
   );
+  self.clients.claim();
 });
 
-// Network-First Strategy: Always fetch fresh assets from the server.
-// Only fall back to cache when totally offline.
-self.addEventListener("fetch", (event) => {
-  if (event.request.method !== "GET") return;
-
-  const url = new URL(event.request.url);
-
-  // Bypass service worker for Next.js internal static chunks and dev assets
-  if (url.pathname.startsWith("/_next/") || url.pathname.startsWith("/api/")) {
-    return;
-  }
-
-  event.respondWith(
-    fetch(event.request)
-      .then((networkResponse) => {
-        if (networkResponse && networkResponse.status === 200) {
-          const responseToCache = networkResponse.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseToCache);
-          });
-        }
-        return networkResponse;
-      })
-      .catch(() => {
-        return caches.match(event.request);
-      })
-  );
+// No fetch interception: always fetch live from network
+self.addEventListener("fetch", () => {
+  // Pass-through to browser default network handler
 });

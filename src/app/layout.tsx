@@ -55,12 +55,12 @@ export const metadata: Metadata = {
     google: hostelConfig.analytics.googleSearchConsoleVerification,
   },
   openGraph: {
-    type: "website",
-    locale: "en_PK",
-    url: "https://grandpavilion.pk",
-    siteName: hostelConfig.identity.name,
     title: `${hostelConfig.identity.name} | Premium Student Living in ${hostelConfig.geo.city}`,
     description: hostelConfig.identity.tagline,
+    url: "https://grandpavilion.pk",
+    siteName: hostelConfig.identity.name,
+    locale: "en_PK",
+    type: "website",
     images: [
       {
         url: "/icons/icon-512.svg",
@@ -85,10 +85,9 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
-  // Rich Structured JSON-LD Data for SEO (Point #14)
+}) {
   const jsonLd = {
     "@context": "https://schema.org",
     "@graph": [
@@ -135,35 +134,6 @@ export default function RootLayout({
           availableLanguage: ["English", "Urdu"],
         },
       },
-      {
-        "@type": "FAQPage",
-        mainEntity: [
-          {
-            "@type": "Question",
-            name: "What security and power backup arrangements exist at Grand Pavilion?",
-            acceptedAnswer: {
-              "@type": "Answer",
-              text: "Grand Pavilion features a synchronous 65 kVA Perkins commercial generator paired with an on-grid 20 kW solar array, ensuring 100% zero-lag power backup for Wi-Fi and air conditioning. Security is enforced via biometric gate scans and 24/7 CCTV.",
-            },
-          },
-          {
-            "@type": "Question",
-            name: "How are monthly fees settled and what is the due date?",
-            acceptedAnswer: {
-              "@type": "Answer",
-              text: "Fees are due on the 5th of each month. Payments can be deposited at any Meezan Bank counter nationwide using our 3-part bank fee challan or transferred via online IBFT.",
-            },
-          },
-          {
-            "@type": "Question",
-            name: "Which universities are near the Gulberg III campus?",
-            acceptedAnswer: {
-              "@type": "Answer",
-              text: "FC College University is 5 minutes away, LUMS is 12 minutes away, and FAST-NUCES and Punjab University are within a 10-minute commute.",
-            },
-          },
-        ],
-      },
     ],
   };
 
@@ -174,11 +144,29 @@ export default function RootLayout({
       className={`${playfair.variable} ${inter.variable} ${notoArabic.variable}`}
     >
       <head>
+        {/* Anti-stale service worker purge script */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              try {
+                if ('serviceWorker' in navigator) {
+                  navigator.serviceWorker.getRegistrations().then(function(regs) {
+                    for (var r of regs) { r.unregister(); }
+                  });
+                }
+                if ('caches' in window) {
+                  caches.keys().then(function(names) {
+                    for (var n of names) { caches.delete(n); }
+                  });
+                }
+              } catch(e) {}
+            `,
+          }}
+        />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
-        {/* Google Analytics 4 Pluggable Tag */}
         {hostelConfig.analytics.ga4MeasurementId && (
           <>
             <Script
@@ -196,10 +184,9 @@ export default function RootLayout({
           </>
         )}
       </head>
-      <body className="bg-canvas text-ink min-h-screen selection:bg-brass-light selection:text-ink">
+      <body className="bg-canvas text-ink min-h-screen selection:bg-brass-light selection:text-ink antialiased">
         <AppProvider>
           {children}
-          <PWAInstallPrompt />
         </AppProvider>
       </body>
     </html>

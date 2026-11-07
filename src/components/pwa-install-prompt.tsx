@@ -8,11 +8,27 @@ export function PWAInstallPrompt() {
   const [showPrompt, setShowPrompt] = useState(false);
 
   useEffect(() => {
-    // Register Service Worker
     if (typeof window !== "undefined" && "serviceWorker" in navigator) {
-      navigator.serviceWorker.register("/sw.js").catch(() => {
-        // graceful ignore if unsupported in current context
-      });
+      // Purge any stale legacy v1 caches on client startup
+      if ("caches" in window) {
+        caches.keys().then((names) => {
+          names.forEach((name) => {
+            if (name !== "grand-pavilion-v2") {
+              caches.delete(name);
+            }
+          });
+        });
+      }
+
+      navigator.serviceWorker
+        .register("/sw.js")
+        .then((reg) => {
+          // Immediately update service worker to activate new sw.js
+          reg.update();
+        })
+        .catch(() => {
+          // graceful ignore if unsupported in current context
+        });
     }
 
     const handleBeforeInstall = (e: Event) => {
@@ -41,7 +57,7 @@ export function PWAInstallPrompt() {
     <div className="fixed bottom-4 right-4 z-40 max-w-sm bg-canvas-surface border border-brass p-4 shadow-xl text-ink">
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-start gap-2.5">
-          <Smartphone className="w-5 h-5 text-brass mt-0.5 shrink-0" />
+          <Smartphone className="w-5 h-5 text-brass mt-0.5 shrink-0 stroke-[1.25]" />
           <div className="space-y-1">
             <p className="text-caption font-serif font-medium text-ink">
               Install Grand Pavilion ERP App
@@ -55,7 +71,7 @@ export function PWAInstallPrompt() {
           onClick={() => setShowPrompt(false)}
           className="text-ink-muted hover:text-ink p-1"
         >
-          <X className="w-3.5 h-3.5" />
+          <X className="w-3.5 h-3.5 stroke-[1.25]" />
         </button>
       </div>
 
@@ -64,7 +80,7 @@ export function PWAInstallPrompt() {
           onClick={handleInstall}
           className="flex-1 inline-flex items-center justify-center gap-1.5 bg-ink text-canvas py-1.5 px-3 text-micro font-medium uppercase tracking-wider hover:bg-brass transition-colors"
         >
-          <Download className="w-3 h-3" />
+          <Download className="w-3 h-3 stroke-[1.25]" />
           <span>Install PWA</span>
         </button>
         <button

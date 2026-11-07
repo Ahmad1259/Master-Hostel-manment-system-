@@ -170,7 +170,7 @@ export default function ExpensesPage() {
           {/* Categorized Breakdown Grid */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             <div className="border border-border bg-canvas-surface p-4">
-              <span className="text-[11px] font-mono text-ink-muted uppercase">Electricity (LESCO)</span>
+              <span className="text-micro font-mono text-ink-muted uppercase">Electricity (LESCO)</span>
               <p className="text-xl font-serif text-ink tracking-tight font-medium font-tabular mt-1">
                 {formatCurrency(
                   expenses
@@ -181,7 +181,7 @@ export default function ExpensesPage() {
             </div>
 
             <div className="border border-border bg-canvas-surface p-4">
-              <span className="text-[11px] font-mono text-ink-muted uppercase">Mess Groceries</span>
+              <span className="text-micro font-mono text-ink-muted uppercase">Mess Groceries</span>
               <p className="text-xl font-serif text-ink tracking-tight font-medium font-tabular mt-1">
                 {formatCurrency(
                   expenses
@@ -192,7 +192,7 @@ export default function ExpensesPage() {
             </div>
 
             <div className="border border-border bg-canvas-surface p-4">
-              <span className="text-[11px] font-mono text-ink-muted uppercase">Gas (SNGPL)</span>
+              <span className="text-micro font-mono text-ink-muted uppercase">Gas (SNGPL)</span>
               <p className="text-xl font-serif text-ink tracking-tight font-medium font-tabular mt-1">
                 {formatCurrency(
                   expenses
@@ -203,7 +203,7 @@ export default function ExpensesPage() {
             </div>
 
             <div className="border border-border bg-canvas-surface p-4">
-              <span className="text-[11px] font-mono text-ink-muted uppercase">Fiber Leased Line</span>
+              <span className="text-micro font-mono text-ink-muted uppercase">Fiber Leased Line</span>
               <p className="text-xl font-serif text-ink tracking-tight font-medium font-tabular mt-1">
                 {formatCurrency(
                   expenses
@@ -218,7 +218,7 @@ export default function ExpensesPage() {
           <div className="border border-border bg-canvas-surface overflow-x-auto">
             <table className="w-full text-left text-body border-collapse">
               <thead>
-                <tr className="border-b border-border bg-canvas-subtle text-[11px] font-mono text-ink-muted uppercase">
+                <tr className="border-b border-border bg-canvas-subtle text-micro font-mono text-ink-muted uppercase">
                   <th className="p-3 font-semibold">Expenditure Item</th>
                   <th className="p-3 font-semibold">Classification</th>
                   <th className="p-3 font-semibold">Disbursed Date</th>
@@ -233,7 +233,7 @@ export default function ExpensesPage() {
                       <p className="font-serif text-subhead font-medium text-ink leading-tight">
                         {exp.title}
                       </p>
-                      <p className="text-[11px] text-ink-muted font-mono">
+                      <p className="text-micro text-ink-muted font-mono">
                         Voucher: {exp.id}
                       </p>
                     </td>
@@ -253,7 +253,7 @@ export default function ExpensesPage() {
                     </td>
 
                     <td className="p-3 text-right">
-                      <span className="inline-block text-[10px] font-mono uppercase bg-emerald-50 text-emerald-800 border border-emerald-300 px-2 py-0.5">
+                      <span className="inline-block text-micro font-mono uppercase bg-emerald-50 text-emerald-800 border border-emerald-300 px-2 py-0.5">
                         {exp.status}
                       </span>
                     </td>
@@ -268,7 +268,7 @@ export default function ExpensesPage() {
         <div className="space-y-6">
           <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
             <div className="border border-border bg-canvas-surface p-4">
-              <span className="text-[11px] font-mono text-ink-muted uppercase">Provisions Tuck Shop</span>
+              <span className="text-micro font-mono text-ink-muted uppercase">Provisions Tuck Shop</span>
               <p className="text-xl font-serif text-brass tracking-tight font-medium font-tabular mt-1">
                 {formatCurrency(
                   auxiliaryIncome
@@ -279,7 +279,7 @@ export default function ExpensesPage() {
             </div>
 
             <div className="border border-border bg-canvas-surface p-4">
-              <span className="text-[11px] font-mono text-ink-muted uppercase">Excess Laundry Care</span>
+              <span className="text-micro font-mono text-ink-muted uppercase">Excess Laundry Care</span>
               <p className="text-xl font-serif text-brass tracking-tight font-medium font-tabular mt-1">
                 {formatCurrency(
                   auxiliaryIncome
@@ -290,7 +290,7 @@ export default function ExpensesPage() {
             </div>
 
             <div className="border border-border bg-canvas-surface p-4">
-              <span className="text-[11px] font-mono text-ink-muted uppercase">Luggage Vault Lockers</span>
+              <span className="text-micro font-mono text-ink-muted uppercase">Luggage Vault Lockers</span>
               <p className="text-xl font-serif text-brass tracking-tight font-medium font-tabular mt-1">
                 {formatCurrency(
                   auxiliaryIncome
@@ -301,7 +301,7 @@ export default function ExpensesPage() {
             </div>
 
             <div className="border border-border bg-canvas-surface p-4">
-              <span className="text-[11px] font-mono text-ink-muted uppercase">Total Ancillary Gross</span>
+              <span className="text-micro font-mono text-ink-muted uppercase">Total Ancillary Gross</span>
               <p className="text-xl font-serif text-emerald-800 tracking-tight font-medium font-tabular mt-1">
                 {formatCurrency(totalAuxiliaryAmount)}
               </p>
@@ -311,7 +311,7 @@ export default function ExpensesPage() {
           <div className="border border-border bg-canvas-surface overflow-x-auto">
             <table className="w-full text-left text-body border-collapse">
               <thead>
-                <tr className="border-b border-border bg-canvas-subtle text-[11px] font-mono text-ink-muted uppercase">
+                <tr className="border-b border-border bg-canvas-subtle text-micro font-mono text-ink-muted uppercase">
                   <th className="p-3 font-semibold">Ancillary Receipt</th>
                   <th className="p-3 font-semibold">Source Channel</th>
                   <th className="p-3 font-semibold">Realized Date</th>
@@ -325,7 +325,7 @@ export default function ExpensesPage() {
                       <p className="font-serif text-subhead font-medium text-ink leading-tight">
                         {aux.title}
                       </p>
-                      <p className="text-[11px] text-ink-muted font-mono">
+                      <p className="text-micro text-ink-muted font-mono">
                         Ref: {aux.id}
                       </p>
                     </td>

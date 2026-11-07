@@ -205,7 +205,7 @@ export default function InventoryPage() {
                       >
                         <div className="flex items-start justify-between pb-2 border-b border-border">
                           <div>
-                            <span className="text-[10px] font-mono uppercase text-ink-muted">
+                            <span className="text-micro font-mono uppercase text-ink-muted">
                               Suite
                             </span>
                             <h4 className="font-serif text-subhead text-ink font-semibold">
@@ -213,7 +213,7 @@ export default function InventoryPage() {
                             </h4>
                           </div>
                           <div className="text-right">
-                            <span className="text-[10px] font-mono border border-border bg-canvas-surface px-1.5 py-0.5 text-ink-muted">
+                            <span className="text-micro font-mono border border-border bg-canvas-surface px-1.5 py-0.5 text-ink-muted">
                               {room.type}
                             </span>
                             <p className="text-caption font-medium text-brass mt-0.5">
@@ -224,7 +224,7 @@ export default function InventoryPage() {
 
                         {/* Bed slots */}
                         <div className="space-y-2">
-                          <p className="text-[11px] font-mono text-ink-muted uppercase">
+                          <p className="text-micro font-mono text-ink-muted uppercase">
                             Bed Allocation ({occupied}/{room.capacity}):
                           </p>
                           <div className="grid grid-cols-1 gap-1.5">
@@ -241,7 +241,7 @@ export default function InventoryPage() {
                                   <span className="font-mono font-medium text-ink mr-2">
                                     {bed.bedLabel}
                                   </span>
-                                  <span className="text-ink-muted text-[11px]">
+                                  <span className="text-ink-muted text-micro">
                                     {bed.status === "OCCUPIED"
                                       ? bed.studentName
                                       : "Available for Allocation"}
@@ -252,7 +252,7 @@ export default function InventoryPage() {
                                   {bed.status === "OCCUPIED" ? (
                                     <button
                                       onClick={() => deallocateBed(bed.id)}
-                                      className="text-[10px] font-mono text-red-600 hover:underline"
+                                      className="text-micro font-mono text-red-600 hover:underline"
                                       title="Release Bed Slot"
                                     >
                                       Deallocate
@@ -263,7 +263,7 @@ export default function InventoryPage() {
                                         setAllocatingBedId(bed.id);
                                         setSelectedStudentId(students[0]?.id || "");
                                       }}
-                                      className="text-[10px] font-mono text-brass hover:underline inline-flex items-center gap-1"
+                                      className="text-micro font-mono text-brass hover:underline inline-flex items-center gap-1"
                                     >
                                       <UserPlus className="w-3 h-3" />
                                       <span>Allocate</span>
@@ -275,7 +275,7 @@ export default function InventoryPage() {
                           </div>
                         </div>
 
-                        <div className="pt-2 border-t border-border flex justify-between items-center text-[11px] font-mono">
+                        <div className="pt-2 border-t border-border flex justify-between items-center text-micro font-mono">
                           <span className="text-ink-muted">Status:</span>
                           <span
                             className={`font-medium ${

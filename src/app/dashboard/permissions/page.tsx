@@ -76,7 +76,7 @@ export default function PermissionsPage() {
       <div className="border border-border bg-canvas-surface overflow-x-auto">
         <table className="w-full text-left text-body border-collapse">
           <thead>
-            <tr className="border-b border-border bg-canvas-subtle text-[11px] font-mono text-ink-muted uppercase">
+            <tr className="border-b border-border bg-canvas-subtle text-micro font-mono text-ink-muted uppercase">
               <th className="p-3 font-semibold">Staff Identity &amp; Role</th>
               <th className="p-3 font-semibold text-center">
                 <div className="flex items-center justify-center gap-1.5">
@@ -112,10 +112,10 @@ export default function PermissionsPage() {
                     {stf.name}
                   </p>
                   <div className="flex items-center gap-2 mt-1">
-                    <span className="text-[10px] font-mono border border-border bg-canvas-subtle px-1.5 py-0.2 text-ink">
+                    <span className="text-micro font-mono border border-border bg-canvas-subtle px-1.5 py-0.2 text-ink">
                       {stf.role}
                     </span>
-                    <span className="text-[10px] font-mono text-ink-muted">
+                    <span className="text-micro font-mono text-ink-muted">
                       ID: {stf.id}
                     </span>
                   </div>

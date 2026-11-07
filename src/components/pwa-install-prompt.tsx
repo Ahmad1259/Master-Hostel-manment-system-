@@ -46,7 +46,7 @@ export function PWAInstallPrompt() {
             <p className="text-caption font-serif font-medium text-ink">
               Install Grand Pavilion ERP App
             </p>
-            <p className="text-[11px] text-ink-muted leading-tight">
+            <p className="text-micro text-ink-muted leading-tight">
               Access the offline bed register and biometric logs directly from your device home screen.
             </p>
           </div>
@@ -62,14 +62,14 @@ export function PWAInstallPrompt() {
       <div className="mt-3 flex gap-2">
         <button
           onClick={handleInstall}
-          className="flex-1 inline-flex items-center justify-center gap-1.5 bg-ink text-canvas py-1.5 px-3 text-[11px] font-medium uppercase tracking-wider hover:bg-brass transition-colors"
+          className="flex-1 inline-flex items-center justify-center gap-1.5 bg-ink text-canvas py-1.5 px-3 text-micro font-medium uppercase tracking-wider hover:bg-brass transition-colors"
         >
           <Download className="w-3 h-3" />
           <span>Install PWA</span>
         </button>
         <button
           onClick={() => setShowPrompt(false)}
-          className="border border-border py-1.5 px-3 text-[11px] text-ink-muted hover:text-ink"
+          className="border border-border py-1.5 px-3 text-micro text-ink-muted hover:text-ink"
         >
           Later
         </button>

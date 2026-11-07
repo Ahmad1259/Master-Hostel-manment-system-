@@ -72,7 +72,7 @@ export default function StaffPage() {
       <div className="border border-border bg-canvas-surface overflow-x-auto">
         <table className="w-full text-left text-body border-collapse">
           <thead>
-            <tr className="border-b border-border bg-canvas-subtle text-[11px] font-mono text-ink-muted uppercase">
+            <tr className="border-b border-border bg-canvas-subtle text-micro font-mono text-ink-muted uppercase">
               <th className="p-3 font-semibold">Staff Identity</th>
               <th className="p-3 font-semibold">Assigned Role</th>
               <th className="p-3 font-semibold">Base Honorarium</th>
@@ -89,7 +89,7 @@ export default function StaffPage() {
                   <p className="font-serif text-subhead font-medium text-ink leading-tight">
                     {stf.name}
                   </p>
-                  <p className="text-[11px] text-ink-muted font-mono flex items-center gap-1 mt-0.5">
+                  <p className="text-micro text-ink-muted font-mono flex items-center gap-1 mt-0.5">
                     <Phone className="w-3 h-3 text-brass" />
                     <span>{stf.phone}</span>
                   </p>
@@ -99,7 +99,7 @@ export default function StaffPage() {
                   <span className="inline-block border border-border bg-canvas-subtle px-2 py-0.5 text-caption font-mono font-medium text-ink">
                     {stf.role}
                   </span>
-                  <p className="text-[10px] text-ink-muted mt-0.5 font-mono">
+                  <p className="text-micro text-ink-muted mt-0.5 font-mono">
                     Since {formatDate(stf.joiningDate)}
                   </p>
                 </td>
@@ -118,7 +118,7 @@ export default function StaffPage() {
                           e.target.value as "PRESENT" | "ABSENT" | "LEAVE"
                         )
                       }
-                      className={`text-caption font-mono uppercase px-2 py-1 border text-[11px] ${
+                      className={`text-caption font-mono uppercase px-2 py-1 border text-micro ${
                         stf.attendanceToday === "PRESENT"
                           ? "bg-emerald-50 text-emerald-800 border-emerald-300"
                           : stf.attendanceToday === "LEAVE"
@@ -135,13 +135,13 @@ export default function StaffPage() {
 
                 <td className="p-3 font-mono text-caption text-ink-muted">
                   <p>In: {stf.checkIn || "08:00 AM"}</p>
-                  <p className="text-[11px]">Out: {stf.checkOut || "05:00 PM"}</p>
+                  <p className="text-micro">Out: {stf.checkOut || "05:00 PM"}</p>
                 </td>
 
                 <td className="p-3 font-mono text-caption">
                   <span className="text-zinc-700 block">{stf.lastSalaryMonth}</span>
                   <span
-                    className={`inline-block text-[10px] font-mono uppercase px-1.5 py-0.2 mt-0.5 ${
+                    className={`inline-block text-micro font-mono uppercase px-1.5 py-0.2 mt-0.5 ${
                       stf.lastSalaryStatus === "PAID"
                         ? "bg-emerald-100 text-emerald-800 border border-emerald-200"
                         : "bg-amber-100 text-amber-800 border border-amber-200"
@@ -155,7 +155,7 @@ export default function StaffPage() {
                   {/* Disburse Salary Button */}
                   <button
                     onClick={() => handleDisburse(stf.id)}
-                    className="inline-flex items-center gap-1 text-[11px] font-mono border border-border bg-ink text-canvas hover:bg-brass px-2.5 py-1 transition-colors"
+                    className="inline-flex items-center gap-1 text-micro font-mono border border-border bg-ink text-canvas hover:bg-brass px-2.5 py-1 transition-colors"
                   >
                     <CreditCard className="w-3 h-3" />
                     <span>Disburse</span>
@@ -167,7 +167,7 @@ export default function StaffPage() {
                       setSelectedStaffForSlip(stf);
                       setShowSlipModal(true);
                     }}
-                    className="inline-flex items-center gap-1 text-[11px] font-mono border border-border bg-canvas-surface hover:bg-canvas-subtle text-ink px-2.5 py-1 transition-colors"
+                    className="inline-flex items-center gap-1 text-micro font-mono border border-border bg-canvas-surface hover:bg-canvas-subtle text-ink px-2.5 py-1 transition-colors"
                   >
                     <Printer className="w-3 h-3 text-brass" />
                     <span>Pay Slip</span>
@@ -210,7 +210,7 @@ export default function StaffPage() {
                 <h2 className="font-serif font-bold text-lg text-zinc-900 uppercase">
                   {hostelConfig.identity.name}
                 </h2>
-                <p className="text-[10px] font-mono text-zinc-600">
+                <p className="text-micro font-mono text-zinc-600">
                   {hostelConfig.identity.legalEntity} • Personnel Payroll Slip
                 </p>
                 <p className="text-caption font-mono font-medium text-brass mt-1">
@@ -218,7 +218,7 @@ export default function StaffPage() {
                 </p>
               </div>
 
-              <div className="grid grid-cols-2 gap-2 text-[11px] font-mono border-b border-zinc-200 pb-3">
+              <div className="grid grid-cols-2 gap-2 text-micro font-mono border-b border-zinc-200 pb-3">
                 <div>
                   <span className="text-zinc-500">Employee:</span>
                   <p className="font-bold text-zinc-900">{selectedStaffForSlip.name}</p>
@@ -288,7 +288,7 @@ export default function StaffPage() {
                 </div>
               </div>
 
-              <div className="pt-8 flex justify-between text-[10px] text-zinc-500 font-mono">
+              <div className="pt-8 flex justify-between text-micro text-zinc-500 font-mono">
                 <div className="border-t border-zinc-400 pt-1 text-center w-28">
                   Staff Signature
                 </div>

@@ -241,7 +241,7 @@ export default function StudentsPage() {
       <div className="border border-border bg-canvas-surface overflow-x-auto">
         <table className="w-full text-left text-body border-collapse">
           <thead>
-            <tr className="border-b border-border bg-canvas-subtle text-[11px] font-mono text-ink-muted uppercase">
+            <tr className="border-b border-border bg-canvas-subtle text-micro font-mono text-ink-muted uppercase">
               <th className="p-3 font-semibold">Resident Dossier</th>
               <th className="p-3 font-semibold">CNIC / B-Form</th>
               <th className="p-3 font-semibold">Contacts</th>
@@ -265,10 +265,10 @@ export default function StudentsPage() {
                     <p className="font-serif text-subhead font-medium text-ink leading-tight">
                       {student.name}
                     </p>
-                    <p className="text-[11px] text-ink-muted">
+                    <p className="text-micro text-ink-muted">
                       S/O: {student.fatherName}
                     </p>
-                    <span className="inline-block text-[9px] font-mono uppercase bg-emerald-100 text-emerald-800 border border-emerald-200 px-1.5 py-0.2 mt-1">
+                    <span className="inline-block text-micro font-mono uppercase bg-emerald-100 text-emerald-800 border border-emerald-200 px-1.5 py-0.2 mt-1">
                       {student.status}
                     </span>
                   </td>
@@ -282,7 +282,7 @@ export default function StudentsPage() {
                       <Phone className="w-3 h-3 text-brass" />
                       <span>{student.phone}</span>
                     </p>
-                    <p className="font-mono text-[11px] text-ink-muted">
+                    <p className="font-mono text-micro text-ink-muted">
                       Guardian: {student.guardianPhone}
                     </p>
                   </td>
@@ -291,14 +291,14 @@ export default function StudentsPage() {
                     <span className="border border-border bg-canvas-subtle px-2 py-0.5 font-medium text-ink">
                       Suite #{student.roomNumber} ({student.bedLabel})
                     </span>
-                    <p className="text-[10px] text-ink-muted mt-1">
+                    <p className="text-micro text-ink-muted mt-1">
                       Tier {student.floorNumber}
                     </p>
                   </td>
 
                   <td className="p-3 max-w-xs text-caption text-ink truncate" title={student.institution}>
                     <p className="truncate font-medium">{student.institution}</p>
-                    <p className="text-[11px] text-ink-muted font-mono">
+                    <p className="text-micro text-ink-muted font-mono">
                       Inducted: {formatDate(student.admissionDate)}
                     </p>
                   </td>
@@ -308,11 +308,11 @@ export default function StudentsPage() {
                       {formatCurrency(student.monthlyRate)}/mo
                     </p>
                     {student.pendingArrears > 0 ? (
-                      <p className="text-[11px] text-status-unpaid">
+                      <p className="text-micro text-status-unpaid">
                         Arrears: {formatCurrency(student.pendingArrears)}
                       </p>
                     ) : (
-                      <p className="text-[11px] text-status-occupied">
+                      <p className="text-micro text-status-occupied">
                         Zero Arrears
                       </p>
                     )}
@@ -326,7 +326,7 @@ export default function StudentsPage() {
                         setTransferBedLabel(student.bedLabel);
                         setTransferRate(student.monthlyRate);
                       }}
-                      className="inline-flex items-center gap-1 text-[11px] font-mono border border-border px-2.5 py-1 bg-canvas-surface hover:bg-canvas-subtle text-ink transition-colors"
+                      className="inline-flex items-center gap-1 text-micro font-mono border border-border px-2.5 py-1 bg-canvas-surface hover:bg-canvas-subtle text-ink transition-colors"
                       title="Reassign Chamber / Bed"
                     >
                       <ArrowRightLeft className="w-3 h-3 text-brass" />

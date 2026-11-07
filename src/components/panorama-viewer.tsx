@@ -8,8 +8,9 @@ interface SceneHotspot {
   name: string;
   nameUrdu: string;
   description: string;
-  backgroundGradient: string;
-  hotspots: { title: string; x: number; y: number }[];
+  environmentTone: string;
+  elevationDetails: { label: string; sub: string; detail: string };
+  hotspots: { title: string; category: string; x: number; y: number }[];
 }
 
 const scenes: SceneHotspot[] = [
@@ -17,35 +18,50 @@ const scenes: SceneHotspot[] = [
     id: "suite-101",
     name: "Executive Single Suite (Chamber 101)",
     nameUrdu: "ایگزیکٹو سنگل پرائیویٹ سویٹ",
-    description: "Private silent study suite with soundproof Fenesta double-glazing and ensuite Italian tile bath.",
-    backgroundGradient: "radial-gradient(ellipse at center, #26262B 0%, #161618 60%, #0D0D0E 100%)",
+    description: "Private silent study suite with soundproof Fenesta double-glazing and ensuite Italian porcelain bath.",
+    environmentTone: "#F7F5EE",
+    elevationDetails: {
+      label: "Chamber Elevation 01-A",
+      sub: "Fenestration & Thermal Envelope",
+      detail: "Double-Glazed Argon Insulated",
+    },
     hotspots: [
-      { title: "Daikin Inverter HVAC", x: 25, y: 35 },
-      { title: "Solid Sheesham Study Desk", x: 50, y: 65 },
-      { title: "Triple Wardrobe Vault", x: 75, y: 40 },
+      { title: "Daikin Inverter Climate HVAC", category: "Climate Zoning", x: 25, y: 32 },
+      { title: "Solid Sheesham Study Carrel", category: "Ergonomics", x: 50, y: 64 },
+      { title: "Floor-to-Ceiling Wardrobe Vault", category: "Storage", x: 75, y: 38 },
     ],
   },
   {
     id: "library-salon",
-    name: "Communal Academic Library & Reading Salon",
+    name: "Academic Library & Reading Hall",
     nameUrdu: "اکیڈمک لائبریری و اسٹڈی ہال",
-    description: "24-hour whisper-quiet reading hall with high-CRI lighting and dedicated power sockets at every station.",
-    backgroundGradient: "radial-gradient(ellipse at center, #2B2620 0%, #1A1612 60%, #0E0C0A 100%)",
+    description: "24-hour whisper-quiet reading hall with high-CRI 3000K illumination and dedicated shielded outlets at every carrel.",
+    environmentTone: "#F5F3EC",
+    elevationDetails: {
+      label: "Chamber Elevation 02-B",
+      sub: "Reference Stacks & Carrel Rows",
+      detail: "Acoustic Slats NRC 0.85",
+    },
     hotspots: [
-      { title: "Quiet Study Carrels", x: 30, y: 55 },
-      { title: "Legal & Medical Reference Library", x: 60, y: 35 },
-      { title: "Coffee & Hydration Dispenser", x: 80, y: 60 },
+      { title: "Acoustically Isolated Carrels", category: "Acoustics", x: 30, y: 55 },
+      { title: "Medical & Engineering Stacks", category: "Curated Reference", x: 60, y: 32 },
+      { title: "Reverse Osmosis Hydration Point", category: "Amenities", x: 80, y: 58 },
     ],
   },
   {
     id: "dining-hall",
-    name: "Grand Dining Pavilion & Commercial Kitchen",
+    name: "Refectory & Dining Pavilion",
     nameUrdu: "ڈائننگ ہال و کچن",
-    description: "Spacious culinary pavilion serving 3 rotational organic farm-to-table meals daily under PFA compliance.",
-    backgroundGradient: "radial-gradient(ellipse at center, #1E2824 0%, #121916 60%, #0B100E 100%)",
+    description: "Spacious culinary refectory serving 3 balanced rotational farm-to-table meals daily under certified food safety standards.",
+    environmentTone: "#F6F4EB",
+    elevationDetails: {
+      label: "Chamber Elevation 03-C",
+      sub: "Stainless Bain-Marie & Prep Bays",
+      detail: "Commercial Hygiene Grade 316",
+    },
     hotspots: [
-      { title: "Commercial Steam Bain-Marie", x: 35, y: 60 },
-      { title: "RO Water Filtration Plant", x: 70, y: 45 },
+      { title: "Commercial Steam Bain-Marie", category: "Thermal Serving", x: 35, y: 60 },
+      { title: "5-Stage Water Purification Plant", category: "Sanitation", x: 70, y: 44 },
     ],
   },
 ];
@@ -69,7 +85,7 @@ export function PanoramaViewer() {
   const handleMouseMove = (e: React.MouseEvent) => {
     if (!isDragging) return;
     const delta = e.clientX - dragStartX;
-    setRotationX((prev) => (prev + delta * 0.2) % 360);
+    setRotationX((prev) => (prev + delta * 0.25) % 360);
     setDragStartX(e.clientX);
   };
 
@@ -83,16 +99,16 @@ export function PanoramaViewer() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-border">
         <div>
           <div className="flex items-center gap-2 text-caption font-mono text-brass uppercase tracking-widest">
-            <Eye className="w-3.5 h-3.5" />
-            <span>Interactive Spatial Inspection</span>
+            <Eye className="w-3.5 h-3.5 stroke-[1.25]" />
+            <span>Spatial Inspection Chamber</span>
           </div>
           <h2 className="font-serif text-subhead tracking-tight text-ink mt-1">
-            360° Architectural Walkthrough &amp; Virtual Viewing
+            360° Architectural Elevation Walkthrough
           </h2>
         </div>
 
         {/* Scene Selection Tabs */}
-        <div className="flex items-center border border-border bg-canvas-subtle p-1 flex-wrap">
+        <div className="flex items-center border border-border bg-canvas p-1 flex-wrap gap-1">
           {scenes.map((scene, idx) => (
             <button
               key={scene.id}
@@ -103,7 +119,7 @@ export function PanoramaViewer() {
               }}
               className={`px-3 py-1.5 text-caption transition-colors ${
                 activeSceneIndex === idx
-                  ? "bg-canvas-surface text-ink font-medium shadow-sm border border-border"
+                  ? "bg-canvas-surface text-ink font-medium shadow-xs border border-border"
                   : "text-ink-muted hover:text-ink"
               }`}
             >
@@ -120,52 +136,96 @@ export function PanoramaViewer() {
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
-        className="relative w-full h-80 sm:h-[420px] mt-6 border border-border overflow-hidden select-none cursor-grab active:cursor-grabbing"
+        className="relative w-full h-84 sm:h-96 mt-6 border border-border overflow-hidden select-none cursor-grab active:cursor-grabbing"
         style={{
-          background: activeScene.backgroundGradient,
+          backgroundColor: activeScene.environmentTone,
         }}
       >
-        {/* Subtle Architectural Horizon Lines & Compass Grid */}
+        {/* Subtle Architectural Drafting Grid */}
         <div
-          className="absolute inset-0 opacity-20 pointer-events-none transition-transform duration-75"
+          className="absolute inset-0 opacity-[0.07] pointer-events-none transition-transform duration-75"
           style={{
-            transform: `translateX(${rotationX * 2}px) scale(${zoomLevel})`,
+            transform: `translateX(${rotationX * 1.5}px) scale(${zoomLevel})`,
             backgroundImage:
-              "linear-gradient(to right, rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.05) 1px, transparent 1px)",
-            backgroundSize: "80px 80px",
+              "linear-gradient(to right, #18181B 1px, transparent 1px), linear-gradient(to bottom, #18181B 1px, transparent 1px)",
+            backgroundSize: "48px 48px",
           }}
         />
 
-        {/* Spatial Room Horizon Simulation */}
+        {/* Architectural Elevation Horizon Frames */}
         <div
           className="absolute inset-0 flex items-center justify-around pointer-events-none transition-transform duration-75"
           style={{
-            transform: `translateX(${rotationX * 1.5}px) scale(${zoomLevel})`,
+            transform: `translateX(${rotationX * 1.2}px) scale(${zoomLevel})`,
           }}
         >
-          <div className="w-64 h-72 border border-zinc-700/50 bg-black/20 flex flex-col justify-between p-4">
-            <span className="text-[10px] font-mono text-zinc-500 uppercase">Elevation A</span>
-            <div className="w-full h-24 border border-zinc-800 bg-zinc-900/40" />
-            <span className="text-[10px] font-mono text-zinc-500">Wall Anchor #01</span>
-          </div>
-
-          <div className="w-72 h-80 border border-zinc-700/50 bg-black/30 flex flex-col justify-between p-4">
-            <span className="text-[10px] font-mono text-zinc-500 uppercase">Elevation B (Fenestration)</span>
-            <div className="w-full h-32 border-2 border-zinc-700 bg-zinc-900/60 p-2 flex gap-1">
-              <div className="flex-1 border border-zinc-700/60" />
-              <div className="flex-1 border border-zinc-700/60" />
+          {/* Elevation Plate 1: Western Wall */}
+          <div className="w-68 h-76 border border-[#DDD8CB] bg-[#FCFBF8]/80 p-5 flex flex-col justify-between shadow-xs">
+            <div className="flex items-center justify-between border-b border-[#E7E3D8] pb-2">
+              <span className="text-micro font-mono text-ink-muted uppercase">Elevation W-01</span>
+              <span className="text-micro font-mono text-brass">Section A</span>
             </div>
-            <span className="text-[10px] font-mono text-zinc-500">Acoustic Double Glazing</span>
+            <div className="w-full h-32 border border-[#E0DCCE] bg-[#FAF8F2] p-2 flex flex-col justify-between">
+              <div className="w-full h-1 bg-brass/30" />
+              <div className="text-center">
+                <span className="text-micro font-serif text-ink font-medium">Inverter Climate Terminal</span>
+                <p className="text-micro font-mono text-ink-faint">R32 Eco-Refrigerant • Quiet 19dB</p>
+              </div>
+              <div className="w-full flex justify-between border-t border-[#EAE6DB] pt-1">
+                <span className="text-micro font-mono text-ink-faint">1.5 TON</span>
+                <span className="text-micro font-mono text-ink-faint">COP 4.1</span>
+              </div>
+            </div>
+            <div className="text-micro font-mono text-ink-faint flex justify-between">
+              <span>W-FRAME: ANODIZED</span>
+              <span>DATUM +2.40m</span>
+            </div>
           </div>
 
-          <div className="w-64 h-72 border border-zinc-700/50 bg-black/20 flex flex-col justify-between p-4">
-            <span className="text-[10px] font-mono text-zinc-500 uppercase">Elevation C</span>
-            <div className="w-full h-28 border border-zinc-800 bg-zinc-900/40" />
-            <span className="text-[10px] font-mono text-zinc-500">Ensuite Portal</span>
+          {/* Elevation Plate 2: Central Fenestration */}
+          <div className="w-80 h-84 border-2 border-[#D8D2C2] bg-[#FFFFFF]/90 p-5 flex flex-col justify-between shadow-xs">
+            <div className="flex items-center justify-between border-b border-[#E7E3D8] pb-2">
+              <span className="text-micro font-mono text-ink-muted uppercase">Central Aperture</span>
+              <span className="text-micro font-mono text-brass">Acoustic Glazing</span>
+            </div>
+            <div className="w-full h-40 border border-[#DDD8CB] bg-[#F7F5EE] p-3 flex gap-2">
+              <div className="flex-1 border border-[#DDD8CB] bg-[#FFFFFF] flex flex-col items-center justify-center p-2 text-center">
+                <span className="text-micro font-serif text-ink">Left Leaf</span>
+                <span className="text-micro font-mono text-ink-faint mt-1">Fenesta System</span>
+              </div>
+              <div className="flex-1 border border-[#DDD8CB] bg-[#FFFFFF] flex flex-col items-center justify-center p-2 text-center">
+                <span className="text-micro font-serif text-ink">Right Leaf</span>
+                <span className="text-micro font-mono text-ink-faint mt-1">Multi-Point Locking</span>
+              </div>
+            </div>
+            <div className="text-micro font-mono text-ink-faint flex justify-between">
+              <span>NATURAL DAYLIGHT 6500K</span>
+              <span>U-VALUE 1.2 W/m²K</span>
+            </div>
+          </div>
+
+          {/* Elevation Plate 3: Study Bay & Joinery */}
+          <div className="w-68 h-76 border border-[#DDD8CB] bg-[#FCFBF8]/80 p-5 flex flex-col justify-between shadow-xs">
+            <div className="flex items-center justify-between border-b border-[#E7E3D8] pb-2">
+              <span className="text-micro font-mono text-ink-muted uppercase">Elevation E-03</span>
+              <span className="text-micro font-mono text-brass">Study Joinery</span>
+            </div>
+            <div className="w-full h-32 border border-[#E0DCCE] bg-[#FAF8F2] p-3 flex flex-col justify-between">
+              <span className="text-micro font-serif text-ink">Solid Walnut Desk</span>
+              <p className="text-micro font-mono text-ink-muted">Integrated Wire Management &amp; Task Illumination</p>
+              <div className="w-full border-t border-[#EAE6DB] pt-1 flex justify-between text-micro font-mono text-ink-faint">
+                <span>1200 x 600 mm</span>
+                <span>FSC CERTIFIED</span>
+              </div>
+            </div>
+            <div className="text-micro font-mono text-ink-faint flex justify-between">
+              <span>JOINERY FIX #04</span>
+              <span>DATUM +0.75m</span>
+            </div>
           </div>
         </div>
 
-        {/* Hotspots */}
+        {/* Hotspots - Elegant architectural brass markers */}
         {activeScene.hotspots.map((hs, i) => {
           const adjustedX = (hs.x + (rotationX / 360) * 100) % 100;
           const displayX = adjustedX < 0 ? adjustedX + 100 : adjustedX;
@@ -187,18 +247,22 @@ export function PanoramaViewer() {
                 }}
                 className="group relative flex items-center justify-center"
               >
-                <div className="w-6 h-6 rounded-full bg-brass/20 border border-brass flex items-center justify-center animate-pulse">
+                {/* Minimalist Brass Target Ring */}
+                <div className="w-6 h-6 rounded-full bg-canvas-surface border border-brass flex items-center justify-center shadow-xs hover:scale-110 transition-transform">
                   <div className="w-2 h-2 rounded-full bg-brass" />
                 </div>
 
-                {/* Hotspot Popover Card */}
+                {/* Hotspot Editorial Popover Card */}
                 {activeTooltip === hs.title && (
-                  <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 w-48 bg-zinc-900 border border-border p-2.5 text-canvas shadow-xl text-left z-20">
-                    <p className="text-caption font-serif text-brass font-medium">
+                  <div className="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 w-56 bg-canvas-surface border border-border p-3 text-ink shadow-md text-left z-20">
+                    <span className="text-micro font-mono text-brass uppercase tracking-wider block">
+                      {hs.category}
+                    </span>
+                    <p className="text-caption font-serif font-medium text-ink mt-0.5">
                       {hs.title}
                     </p>
-                    <p className="text-[11px] text-zinc-400 mt-1 leading-snug">
-                      Verified architectural fixture under commercial warranty.
+                    <p className="text-micro text-ink-muted mt-1 leading-snug">
+                      Commercial fixture verified against institutional specifications.
                     </p>
                   </div>
                 )}
@@ -207,24 +271,24 @@ export function PanoramaViewer() {
           );
         })}
 
-        {/* Spatial HUD Overlay Controls */}
+        {/* Minimalist Architectural HUD Overlay */}
         <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between pointer-events-none">
-          <div className="bg-black/60 backdrop-blur-xs border border-zinc-700 px-3 py-1.5 text-[11px] font-mono text-zinc-300 flex items-center gap-2">
-            <RotateCw className="w-3.5 h-3.5 text-brass animate-spin-slow" />
-            <span>Click &amp; Drag Horizontally To Orbit Chamber (Bearing: {Math.round(rotationX)}°)</span>
+          <div className="bg-canvas-surface/90 border border-border px-3 py-1.5 text-micro font-mono text-ink-muted flex items-center gap-2 shadow-xs">
+            <RotateCw className="w-3.5 h-3.5 text-brass" />
+            <span>Drag Horizontally To Orbit Chamber (Bearing: {Math.round(rotationX)}°)</span>
           </div>
 
-          <div className="flex items-center gap-2 pointer-events-auto">
+          <div className="flex items-center gap-1.5 pointer-events-auto">
             <button
-              onClick={() => setZoomLevel((z) => Math.min(1.4, z + 0.1))}
-              className="p-1.5 bg-black/60 border border-zinc-700 text-zinc-300 hover:text-brass transition-colors"
+              onClick={() => setZoomLevel((z) => Math.min(1.3, z + 0.1))}
+              className="p-1.5 bg-canvas-surface border border-border text-ink hover:text-brass hover:border-brass transition-colors shadow-xs"
               title="Zoom In"
             >
               <ZoomIn className="w-4 h-4 stroke-[1.25]" />
             </button>
             <button
-              onClick={() => setZoomLevel((z) => Math.max(0.8, z - 0.1))}
-              className="p-1.5 bg-black/60 border border-zinc-700 text-zinc-300 hover:text-brass transition-colors"
+              onClick={() => setZoomLevel((z) => Math.max(0.85, z - 0.1))}
+              className="p-1.5 bg-canvas-surface border border-border text-ink hover:text-brass hover:border-brass transition-colors shadow-xs"
               title="Zoom Out"
             >
               <ZoomOut className="w-4 h-4 stroke-[1.25]" />
@@ -235,8 +299,8 @@ export function PanoramaViewer() {
 
       <div className="mt-4 flex flex-col sm:flex-row items-start sm:items-center justify-between text-caption text-ink-muted">
         <p>{activeScene.description}</p>
-        <span className="font-mono text-[11px] border-b border-dotted border-border mt-2 sm:mt-0">
-          Gaussian Splat &amp; Pannellum 360 Integrated Engine
+        <span className="font-mono text-micro text-ink-faint mt-2 sm:mt-0">
+          Gaussian Splat &amp; Pannellum 360 Dual-Pipeline Ready
         </span>
       </div>
     </div>

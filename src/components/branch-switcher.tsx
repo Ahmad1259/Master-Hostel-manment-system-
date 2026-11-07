@@ -30,10 +30,10 @@ export function BranchSwitcher() {
       >
         <Building2 className="w-3.5 h-3.5 text-brass stroke-[1.25]" />
         <div className="hidden sm:block">
-          <p className="text-[10px] font-mono text-ink-muted uppercase leading-none">
+          <p className="text-micro font-mono text-ink-muted uppercase leading-none">
             Facility Branch
           </p>
-          <p className="text-caption font-medium text-ink truncate max-w-[170px] leading-tight">
+          <p className="text-caption font-medium text-ink truncate max-w-44 leading-tight">
             {language === "ur" ? activeBranch.nameUrdu : activeBranch.name}
           </p>
         </div>
@@ -42,7 +42,7 @@ export function BranchSwitcher() {
 
       {isOpen && (
         <div className="absolute right-0 mt-1 w-72 bg-canvas-surface border border-border shadow-xl z-50 p-1 space-y-1">
-          <div className="px-3 py-2 border-b border-border text-[11px] font-mono text-ink-muted uppercase">
+          <div className="px-3 py-2 border-b border-border text-micro font-mono text-ink-muted uppercase">
             Switch Commercial Property
           </div>
 
@@ -63,7 +63,7 @@ export function BranchSwitcher() {
                   <p className="text-caption font-medium text-ink leading-tight">
                     {language === "ur" ? branch.nameUrdu : branch.name}
                   </p>
-                  <p className="text-[11px] text-ink-muted flex items-center gap-1 mt-1 font-mono">
+                  <p className="text-micro text-ink-muted flex items-center gap-1 mt-1 font-mono">
                     <MapPin className="w-3 h-3 text-brass" />
                     <span>
                       {branch.city} • {branch.totalRooms} Suites ({branch.totalBeds} Beds)

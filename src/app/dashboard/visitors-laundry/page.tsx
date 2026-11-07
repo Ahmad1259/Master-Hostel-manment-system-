@@ -150,7 +150,7 @@ export default function VisitorsLaundryPage() {
           <div className="border border-border bg-canvas-surface overflow-x-auto">
             <table className="w-full text-left text-body border-collapse">
               <thead>
-                <tr className="border-b border-border bg-canvas-subtle text-[11px] font-mono text-ink-muted uppercase">
+                <tr className="border-b border-border bg-canvas-subtle text-micro font-mono text-ink-muted uppercase">
                   <th className="p-3 font-semibold">Guest Full Name</th>
                   <th className="p-3 font-semibold">National Identity (CNIC)</th>
                   <th className="p-3 font-semibold">Host Resident</th>
@@ -167,7 +167,7 @@ export default function VisitorsLaundryPage() {
                       <p className="font-serif text-subhead font-medium text-ink leading-tight">
                         {v.visitorName}
                       </p>
-                      <p className="text-[11px] text-ink-muted font-mono flex items-center gap-1 mt-0.5">
+                      <p className="text-micro text-ink-muted font-mono flex items-center gap-1 mt-0.5">
                         <Phone className="w-3 h-3 text-brass" />
                         <span>{v.phone || "—"}</span>
                       </p>
@@ -197,7 +197,7 @@ export default function VisitorsLaundryPage() {
                       {v.status === "CHECKED_IN" && (
                         <button
                           onClick={() => checkoutVisitor(v.id)}
-                          className="inline-flex items-center gap-1 text-[11px] font-mono border border-border bg-ink text-canvas hover:bg-brass px-2.5 py-1 transition-colors"
+                          className="inline-flex items-center gap-1 text-micro font-mono border border-border bg-ink text-canvas hover:bg-brass px-2.5 py-1 transition-colors"
                         >
                           <Clock className="w-3 h-3" />
                           <span>Check Out</span>
@@ -206,7 +206,7 @@ export default function VisitorsLaundryPage() {
 
                       <button
                         onClick={() => setGatePassVisitor(v)}
-                        className="inline-flex items-center gap-1 text-[11px] font-mono border border-border bg-canvas-surface hover:bg-canvas-subtle text-ink px-2.5 py-1 transition-colors"
+                        className="inline-flex items-center gap-1 text-micro font-mono border border-border bg-canvas-surface hover:bg-canvas-subtle text-ink px-2.5 py-1 transition-colors"
                       >
                         <KeyRound className="w-3 h-3 text-brass" />
                         <span>Gate Pass</span>
@@ -224,7 +224,7 @@ export default function VisitorsLaundryPage() {
           <div className="border border-border bg-canvas-surface overflow-x-auto">
             <table className="w-full text-left text-body border-collapse">
               <thead>
-                <tr className="border-b border-border bg-canvas-subtle text-[11px] font-mono text-ink-muted uppercase">
+                <tr className="border-b border-border bg-canvas-subtle text-micro font-mono text-ink-muted uppercase">
                   <th className="p-3 font-semibold">Resident Particulars</th>
                   <th className="p-3 font-semibold">Pieces Submitted</th>
                   <th className="p-3 font-semibold">Deposit Date</th>
@@ -240,7 +240,7 @@ export default function VisitorsLaundryPage() {
                       <p className="font-serif text-subhead font-medium text-ink leading-tight">
                         {r.studentName}
                       </p>
-                      <p className="text-[11px] text-ink-muted font-mono">
+                      <p className="text-micro text-ink-muted font-mono">
                         Suite #{r.roomNumber}
                       </p>
                     </td>
@@ -263,7 +263,7 @@ export default function VisitorsLaundryPage() {
                         onChange={(e) =>
                           updateLaundryStatus(r.id, e.target.value as any)
                         }
-                        className={`text-caption font-mono uppercase px-2 py-0.5 border text-[11px] ${
+                        className={`text-caption font-mono uppercase px-2 py-0.5 border text-micro ${
                           r.status === "RETURNED"
                             ? "bg-emerald-50 text-emerald-800 border-emerald-300"
                             : r.status === "READY"
@@ -277,7 +277,7 @@ export default function VisitorsLaundryPage() {
                       </select>
                     </td>
 
-                    <td className="p-3 text-right font-mono text-[11px] text-ink-muted">
+                    <td className="p-3 text-right font-mono text-micro text-ink-muted">
                       {r.returnedDate ? formatDate(r.returnedDate) : "In Process"}
                     </td>
                   </tr>
@@ -504,11 +504,11 @@ export default function VisitorsLaundryPage() {
               </div>
             </div>
 
-            <div className="border border-zinc-800 p-4 bg-white text-center space-y-3 font-mono text-[11px] print:border-none print:p-0">
+            <div className="border border-zinc-800 p-4 bg-white text-center space-y-3 font-mono text-micro print:border-none print:p-0">
               <p className="font-serif font-bold text-base text-zinc-900 uppercase">
                 OFFICIAL RESIDENT GATE PASS
               </p>
-              <p className="text-[9px] text-zinc-600">Grand Pavilion Security Directorate</p>
+              <p className="text-micro text-zinc-600">Grand Pavilion Security Directorate</p>
 
               <div className="border-t border-b border-zinc-300 py-2 text-left space-y-1">
                 <div className="flex justify-between">
@@ -533,11 +533,11 @@ export default function VisitorsLaundryPage() {
                 </div>
               </div>
 
-              <p className="text-[9px] text-zinc-500">
+              <p className="text-micro text-zinc-500">
                 Authorized for entry. Must be surrendered to guard desk at egress before 20:00.
               </p>
 
-              <div className="pt-4 border-t border-zinc-300 flex justify-between text-[9px] text-zinc-400">
+              <div className="pt-4 border-t border-zinc-300 flex justify-between text-micro text-zinc-400">
                 <span>Guard Stamp</span>
                 <span>Warden Initials</span>
               </div>

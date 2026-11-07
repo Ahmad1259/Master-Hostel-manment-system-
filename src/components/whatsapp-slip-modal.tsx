@@ -165,7 +165,7 @@ ${invoice.arrears > 0 ? `سابقہ واجب الادا بقایا جات: ${for
             </span>
             <button
               onClick={handleCopy}
-              className="inline-flex items-center gap-1 hover:text-ink text-[11px]"
+              className="inline-flex items-center gap-1 hover:text-ink text-micro"
             >
               {copied ? (
                 <>
@@ -182,7 +182,7 @@ ${invoice.arrears > 0 ? `سابقہ واجب الادا بقایا جات: ${for
           </div>
 
           <pre
-            className="w-full h-44 p-3 bg-zinc-900 text-zinc-200 text-[11px] font-mono leading-relaxed border border-border overflow-y-auto whitespace-pre-wrap select-all"
+            className="w-full h-44 p-3 bg-zinc-900 text-zinc-200 text-micro font-mono leading-relaxed border border-border overflow-y-auto whitespace-pre-wrap select-all"
             dir={language === "ur" ? "rtl" : "ltr"}
           >
             {activeMessage}

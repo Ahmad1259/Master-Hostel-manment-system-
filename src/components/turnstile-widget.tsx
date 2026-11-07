@@ -54,13 +54,13 @@ export function TurnstileWidget({ onVerify, isVerified = false }: TurnstileWidge
               ? "Verifying telemetry..."
               : "Verify Non-Automated Operator"}
           </span>
-          <span className="text-[10px] text-ink-muted font-mono block">
+          <span className="text-micro text-ink-muted font-mono block">
             Cloudflare Turnstile Managed Challenge
           </span>
         </div>
       </div>
 
-      <div className="flex flex-col items-end text-[10px] text-ink-faint font-mono">
+      <div className="flex flex-col items-end text-micro text-ink-faint font-mono">
         <ShieldCheck className="w-4 h-4 text-brass" />
         <span className="mt-0.5">Privacy • Terms</span>
       </div>

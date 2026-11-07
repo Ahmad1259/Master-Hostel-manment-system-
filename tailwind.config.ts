@@ -47,14 +47,15 @@ const config: Config = {
         arabic: ["var(--font-noto-arabic)", "Traditional Arabic", "Tahoma", "sans-serif"],
       },
       fontSize: {
-        // Strictly constrained to 4 distinct operational tiers as per Craft Manifesto
+        // Strict 4-Tier Operational Typography Scale (+ 1 Micro Monospace Token)
+        micro: ["0.6875rem", { lineHeight: "1rem", letterSpacing: "0.03em" }],       // 11px
         caption: ["0.75rem", { lineHeight: "1.125rem", letterSpacing: "0.02em" }],    // 12px
         body: ["0.875rem", { lineHeight: "1.5rem", letterSpacing: "0.01em" }],        // 14px
         subhead: ["1.125rem", { lineHeight: "1.625rem", letterSpacing: "-0.01em" }],  // 18px
         title: ["1.75rem", { lineHeight: "2.125rem", letterSpacing: "-0.025em" }],    // 28px
       },
       spacing: {
-        // 8px/4px layout rhythm tokens
+        // Strict 8px/4px layout rhythm tokens
         "1": "0.25rem", // 4px
         "2": "0.5rem",  // 8px
         "3": "0.75rem", // 12px

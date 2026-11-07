@@ -113,7 +113,7 @@ export default function FeesPage() {
           <p className="text-2xl font-serif text-ink tracking-tight font-medium font-tabular">
             {formatCurrency(totalBilled)}
           </p>
-          <p className="text-[11px] font-mono text-ink-muted">
+          <p className="text-micro font-mono text-ink-muted">
             {filteredInvoices.length} Registered Challans
           </p>
         </div>
@@ -123,7 +123,7 @@ export default function FeesPage() {
           <p className="text-2xl font-serif text-status-occupied tracking-tight font-medium font-tabular">
             {formatCurrency(totalPaid)}
           </p>
-          <p className="text-[11px] font-mono text-status-occupied">
+          <p className="text-micro font-mono text-status-occupied">
             Settled via Meezan Bank IBFT / Cash
           </p>
         </div>
@@ -133,7 +133,7 @@ export default function FeesPage() {
           <p className="text-2xl font-serif text-status-unpaid tracking-tight font-medium font-tabular">
             {formatCurrency(totalArrears)}
           </p>
-          <p className="text-[11px] font-mono text-status-unpaid">
+          <p className="text-micro font-mono text-status-unpaid">
             Rolled Over Unpaid Balances
           </p>
         </div>
@@ -171,7 +171,7 @@ export default function FeesPage() {
       <div className="border border-border bg-canvas-surface overflow-x-auto">
         <table className="w-full text-left text-body border-collapse">
           <thead>
-            <tr className="border-b border-border bg-canvas-subtle text-[11px] font-mono text-ink-muted uppercase">
+            <tr className="border-b border-border bg-canvas-subtle text-micro font-mono text-ink-muted uppercase">
               <th className="p-3 font-semibold">Challan Ref &amp; Cycle</th>
               <th className="p-3 font-semibold">Resident Particulars</th>
               <th className="p-3 font-semibold">Tariff Breakdown</th>
@@ -195,10 +195,10 @@ export default function FeesPage() {
                     <span className="text-caption font-bold text-ink block">
                       {inv.id}
                     </span>
-                    <span className="text-[11px] text-ink-muted">
+                    <span className="text-micro text-ink-muted">
                       {inv.month} {inv.year}
                     </span>
-                    <span className="text-[10px] text-zinc-400 block mt-0.5">
+                    <span className="text-micro text-zinc-400 block mt-0.5">
                       Due: {formatDate(inv.dueDate)}
                     </span>
                   </td>
@@ -207,17 +207,17 @@ export default function FeesPage() {
                     <p className="font-serif text-subhead font-medium text-ink leading-tight">
                       {inv.studentName}
                     </p>
-                    <p className="text-[11px] text-ink-muted font-mono">
+                    <p className="text-micro text-ink-muted font-mono">
                       Chamber: Suite #{inv.roomNumber}
                     </p>
                     {inv.bankReceiptRef && (
-                      <span className="text-[10px] font-mono text-brass mt-0.5 block truncate max-w-[150px]">
+                      <span className="text-micro font-mono text-brass mt-0.5 block truncate max-w-36">
                         Ref: {inv.bankReceiptRef}
                       </span>
                     )}
                   </td>
 
-                  <td className="p-3 font-mono text-[11px] space-y-0.5">
+                  <td className="p-3 font-mono text-micro space-y-0.5">
                     <div className="text-zinc-600">Base: {formatCurrency(inv.amount)}</div>
                     {inv.arrears > 0 && (
                       <div className="text-red-700">Arrears B/F: +{formatCurrency(inv.arrears)}</div>
@@ -226,7 +226,7 @@ export default function FeesPage() {
                       <div className="text-emerald-700">
                         Waiver: -{formatCurrency(inv.discount)}
                         {inv.discountReason && (
-                          <span className="block text-[9px] text-zinc-400 font-sans italic">
+                          <span className="block text-micro text-zinc-400 font-sans italic">
                             ({inv.discountReason})
                           </span>
                         )}
@@ -244,7 +244,7 @@ export default function FeesPage() {
 
                   <td className="p-3">
                     <span
-                      className={`inline-block text-[10px] font-mono uppercase px-2 py-0.5 border ${
+                      className={`inline-block text-micro font-mono uppercase px-2 py-0.5 border ${
                         inv.status === "PAID"
                           ? "bg-emerald-50 text-emerald-800 border-emerald-300"
                           : inv.status === "PARTIAL"
@@ -259,7 +259,7 @@ export default function FeesPage() {
                         : "Arrears Due"}
                     </span>
                     {inv.balanceDues > 0 && (
-                      <p className="text-[11px] font-mono text-status-unpaid font-medium mt-1">
+                      <p className="text-micro font-mono text-status-unpaid font-medium mt-1">
                         Dues: {formatCurrency(inv.balanceDues)}
                       </p>
                     )}
@@ -270,7 +270,7 @@ export default function FeesPage() {
                     {inv.status !== "PAID" && (
                       <button
                         onClick={() => handleOpenPayment(inv)}
-                        className="inline-flex items-center gap-1 text-[11px] font-mono border border-border bg-ink text-canvas hover:bg-brass px-2 py-1 transition-colors"
+                        className="inline-flex items-center gap-1 text-micro font-mono border border-border bg-ink text-canvas hover:bg-brass px-2 py-1 transition-colors"
                         title="Record Remittance"
                       >
                         <CreditCard className="w-3 h-3" />
@@ -281,7 +281,7 @@ export default function FeesPage() {
                     {/* View/Print Bank Challan */}
                     <button
                       onClick={() => setSelectedInvoiceForChallan(inv)}
-                      className="inline-flex items-center gap-1 text-[11px] font-mono border border-border bg-canvas-surface hover:bg-canvas-subtle text-ink px-2 py-1 transition-colors"
+                      className="inline-flex items-center gap-1 text-micro font-mono border border-border bg-canvas-surface hover:bg-canvas-subtle text-ink px-2 py-1 transition-colors"
                       title="View Official 3-Part Bank Challan"
                     >
                       <Printer className="w-3 h-3 text-brass" />
@@ -294,7 +294,7 @@ export default function FeesPage() {
                         const std = students.find((s) => s.id === inv.studentId);
                         setSelectedInvoiceForWhatsApp(inv);
                       }}
-                      className="inline-flex items-center gap-1 text-[11px] font-mono border border-emerald-300 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 px-2 py-1 transition-colors"
+                      className="inline-flex items-center gap-1 text-micro font-mono border border-emerald-300 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 px-2 py-1 transition-colors"
                       title="Dispatch WhatsApp Slip"
                     >
                       <MessageSquare className="w-3 h-3 text-emerald-700" />
@@ -347,7 +347,7 @@ export default function FeesPage() {
                   onChange={(e) => setPaymentAmount(Number(e.target.value))}
                   className="w-full border border-border px-3 py-2 text-body bg-canvas focus:outline-hidden focus:border-brass font-mono"
                 />
-                <span className="text-[10px] text-ink-muted font-mono mt-0.5 block">
+                <span className="text-micro text-ink-muted font-mono mt-0.5 block">
                   Partial payments will leave remaining balance as rolling arrears.
                 </span>
               </div>
@@ -433,7 +433,7 @@ export default function FeesPage() {
 
               <div className="p-3 bg-canvas-subtle border border-border text-caption text-ink-muted space-y-1">
                 <p className="font-medium text-ink">Statutory Rollover Rules:</p>
-                <ul className="list-disc list-inside space-y-0.5 text-[11px]">
+                <ul className="list-disc list-inside space-y-0.5 text-micro">
                   <li>All active residents receive an automated invoice.</li>
                   <li>Previous unpaid dues automatically carry forward as arrears.</li>
                   <li>Challans are generated with Meezan Bank IBAN metadata.</li>

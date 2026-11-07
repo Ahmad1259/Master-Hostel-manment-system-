@@ -109,7 +109,7 @@ export default function SettingsPage() {
             </div>
             <div className="pt-1">
               <span className="text-ink-muted block mb-1">Nearby Educational Campuses:</span>
-              <ul className="list-disc list-inside space-y-0.5 text-[11px] text-ink">
+              <ul className="list-disc list-inside space-y-0.5 text-micro text-ink">
                 {hostelConfig.geo.nearbyInstitutions.slice(0, 3).map((inst, i) => (
                   <li key={i}>{inst.name} ({inst.distanceKm} km, {inst.transitTimeMinutes} min)</li>
                 ))}
@@ -187,7 +187,7 @@ export default function SettingsPage() {
             </div>
             <div className="flex justify-between py-1 border-b border-border/60">
               <span className="text-ink-muted">Search Console Token:</span>
-              <span className="text-ink text-[11px] truncate max-w-[180px]">
+              <span className="text-ink text-micro truncate max-w-48">
                 {hostelConfig.analytics.googleSearchConsoleVerification}
               </span>
             </div>

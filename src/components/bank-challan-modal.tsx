@@ -58,23 +58,23 @@ export function BankChallanModal({ invoice, onClose }: BankChallanModalProps) {
           {vouchers.map((v, idx) => (
             <div
               key={idx}
-              className={`border border-dashed border-zinc-300 p-3 flex flex-col justify-between text-[11px] leading-tight ${
+              className={`border border-dashed border-zinc-300 p-3 flex flex-col justify-between text-micro leading-tight ${
                 idx !== 2 ? "border-r-zinc-400" : ""
               }`}
             >
               {/* Bank & Hostel Header */}
               <div className="border-b border-zinc-800 pb-2 mb-2 text-center">
-                <p className="font-serif font-bold text-[13px] tracking-tight uppercase text-zinc-900">
+                <p className="font-serif font-bold text-caption tracking-tight uppercase text-zinc-900">
                   {hostelConfig.banking.bankName}
                 </p>
-                <p className="font-mono text-[9px] text-zinc-600">
+                <p className="font-mono text-micro text-zinc-600">
                   {hostelConfig.banking.branchCode}
                 </p>
-                <p className="font-mono text-[9px] font-semibold text-zinc-800 uppercase mt-0.5">
+                <p className="font-mono text-micro font-semibold text-zinc-800 uppercase mt-0.5">
                   IBAN: {hostelConfig.banking.iban}
                 </p>
                 <div className="bg-zinc-100 border border-zinc-200 py-0.5 px-2 mt-1 inline-block">
-                  <span className="font-bold text-[10px] tracking-wider text-zinc-900">
+                  <span className="font-bold text-micro tracking-wider text-zinc-900">
                     {v.label}
                   </span>
                 </div>
@@ -100,7 +100,7 @@ export function BankChallanModal({ invoice, onClose }: BankChallanModalProps) {
               <div className="border-t border-b border-zinc-200 py-1.5 mb-2 font-mono space-y-0.5">
                 <div className="flex justify-between">
                   <span className="text-zinc-500">Resident:</span>
-                  <span className="font-bold text-zinc-900 truncate max-w-[150px]">
+                  <span className="font-bold text-zinc-900 truncate max-w-36">
                     {invoice.studentName}
                   </span>
                 </div>
@@ -110,7 +110,7 @@ export function BankChallanModal({ invoice, onClose }: BankChallanModalProps) {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-zinc-500">Account:</span>
-                  <span className="text-[10px]">{hostelConfig.banking.accountTitle}</span>
+                  <span className="text-micro">{hostelConfig.banking.accountTitle}</span>
                 </div>
               </div>
 
@@ -136,7 +136,7 @@ export function BankChallanModal({ invoice, onClose }: BankChallanModalProps) {
                   <span>Net Payable:</span>
                   <span className="font-mono">{formatCurrency(invoice.totalDue)}</span>
                 </div>
-                <div className="flex justify-between py-0.5 text-[9px] text-zinc-500">
+                <div className="flex justify-between py-0.5 text-micro text-zinc-500">
                   <span>Late Fee After Due Date (+5%):</span>
                   <span className="font-mono">
                     {formatCurrency(invoice.totalDue * 1.05)}
@@ -146,7 +146,7 @@ export function BankChallanModal({ invoice, onClose }: BankChallanModalProps) {
 
               {/* Verification & Signatures */}
               <div className="border-t border-zinc-200 pt-3 mt-auto space-y-6">
-                <div className="flex justify-between text-[9px] text-zinc-400">
+                <div className="flex justify-between text-micro text-zinc-400">
                   <div className="border-t border-zinc-400 pt-1 text-center w-20">
                     Resident Sig.
                   </div>
@@ -155,7 +155,7 @@ export function BankChallanModal({ invoice, onClose }: BankChallanModalProps) {
                   </div>
                 </div>
 
-                <div className="text-[8px] text-zinc-400 text-center font-mono leading-tight">
+                <div className="text-micro text-zinc-400 text-center font-mono leading-tight">
                   Deposit at any Meezan Bank Branch nationwide or via online IBFT.
                 </div>
               </div>

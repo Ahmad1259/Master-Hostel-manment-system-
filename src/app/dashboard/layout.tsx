@@ -61,14 +61,14 @@ export default function DashboardLayout({
           </button>
 
           <Link href="/dashboard" className="flex items-center gap-2.5">
-            <div className="w-8 h-8 border border-brass flex items-center justify-center font-serif font-bold text-brass text-[11px]">
+            <div className="w-8 h-8 border border-brass flex items-center justify-center font-serif font-bold text-brass text-micro">
               {hostelConfig.identity.monogram}
             </div>
             <div className="hidden sm:block">
               <span className="font-serif text-caption font-bold text-ink uppercase tracking-wider block leading-none">
                 {hostelConfig.identity.name}
               </span>
-              <span className="text-[10px] font-mono text-ink-muted">
+              <span className="text-micro font-mono text-ink-muted">
                 Commercial ERP Directorate
               </span>
             </div>
@@ -91,14 +91,14 @@ export default function DashboardLayout({
           </Link>
 
           <div className="hidden md:flex items-center gap-2 pl-2 border-l border-border">
-            <div className="w-7 h-7 rounded-full bg-brass/10 border border-brass/40 flex items-center justify-center text-brass font-mono text-[11px] font-bold">
+            <div className="w-7 h-7 rounded-full bg-brass/10 border border-brass/40 flex items-center justify-center text-brass font-mono text-micro font-bold">
               WA
             </div>
             <div className="text-left">
-              <span className="text-[11px] font-medium text-ink block leading-none">
+              <span className="text-micro font-medium text-ink block leading-none">
                 Maj. (R) Tariq
               </span>
-              <span className="text-[9px] font-mono text-brass block">
+              <span className="text-micro font-mono text-brass block">
                 Chief Warden
               </span>
             </div>
@@ -110,7 +110,7 @@ export default function DashboardLayout({
       <div className="flex-1 flex overflow-hidden">
         {/* Desktop Sidebar */}
         <aside className="hidden md:flex w-64 flex-col border-r border-border bg-canvas-surface p-4 space-y-1 shrink-0 overflow-y-auto">
-          <div className="px-3 py-2 text-[10px] font-mono text-ink-muted uppercase tracking-widest">
+          <div className="px-3 py-2 text-micro font-mono text-ink-muted uppercase tracking-widest">
             Core ERP Modules
           </div>
 
@@ -139,7 +139,7 @@ export default function DashboardLayout({
           })}
 
           <div className="mt-auto pt-6 border-t border-border space-y-2">
-            <div className="p-3 bg-canvas-subtle border border-border text-[11px] text-ink-muted space-y-1">
+            <div className="p-3 bg-canvas-subtle border border-border text-micro text-ink-muted space-y-1">
               <div className="flex items-center gap-1.5 text-brass font-mono">
                 <ShieldCheck className="w-3.5 h-3.5" />
                 <span>Zero-Exposure Protected</span>

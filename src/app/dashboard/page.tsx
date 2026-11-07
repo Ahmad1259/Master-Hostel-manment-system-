@@ -113,7 +113,7 @@ export default function DashboardOverviewPage() {
               </span>
             </div>
           </div>
-          <p className="text-[11px] text-ink-muted font-mono">
+          <p className="text-micro text-ink-muted font-mono">
             {totalBeds - occupiedBeds} Chambers Available
           </p>
         </div>
@@ -128,12 +128,12 @@ export default function DashboardOverviewPage() {
             <div className="text-2xl font-serif text-ink tracking-tight font-medium font-tabular">
               {formatCurrency(totalBilling)}
             </div>
-            <div className="flex items-center gap-1.5 text-[11px] text-status-occupied mt-1 font-mono">
+            <div className="flex items-center gap-1.5 text-micro text-status-occupied mt-1 font-mono">
               <CheckCircle2 className="w-3 h-3" />
               <span>Realized: {formatCurrency(totalCollected)}</span>
             </div>
           </div>
-          <p className="text-[11px] text-ink-muted font-mono">
+          <p className="text-micro text-ink-muted font-mono">
             Cycle: November 2026
           </p>
         </div>
@@ -148,11 +148,11 @@ export default function DashboardOverviewPage() {
             <div className="text-2xl font-serif text-status-unpaid tracking-tight font-medium font-tabular">
               {formatCurrency(pendingArrears)}
             </div>
-            <div className="flex items-center gap-1.5 text-[11px] text-status-partial mt-1 font-mono">
+            <div className="flex items-center gap-1.5 text-micro text-status-partial mt-1 font-mono">
               <span>Carried Forward Balances</span>
             </div>
           </div>
-          <p className="text-[11px] text-ink-muted font-mono">
+          <p className="text-micro text-ink-muted font-mono">
             Late Surcharge 5.0% In Effect
           </p>
         </div>
@@ -167,11 +167,11 @@ export default function DashboardOverviewPage() {
             <div className="text-2xl font-serif text-emerald-800 tracking-tight font-medium font-tabular">
               {formatCurrency(netSurplus)}
             </div>
-            <div className="flex items-center gap-1.5 text-[11px] text-ink-muted mt-1 font-mono">
+            <div className="flex items-center gap-1.5 text-micro text-ink-muted mt-1 font-mono">
               <span>Expenses: {formatCurrency(totalExpenses)}</span>
             </div>
           </div>
-          <p className="text-[11px] text-ink-muted font-mono">
+          <p className="text-micro text-ink-muted font-mono">
             Audited Operating Margin
           </p>
         </div>
@@ -216,7 +216,7 @@ export default function DashboardOverviewPage() {
                       <span className="text-caption font-medium text-ink">
                         {floor.name}
                       </span>
-                      <p className="text-[11px] text-ink-muted font-mono">
+                      <p className="text-micro text-ink-muted font-mono">
                         {floor.rooms.length} Suites ({fCapacity} Beds Total)
                       </p>
                     </div>
@@ -224,7 +224,7 @@ export default function DashboardOverviewPage() {
                       <span className="text-caption font-mono font-medium text-ink">
                         {fOccupied} / {fCapacity} Occupied
                       </span>
-                      <p className="text-[11px] font-mono text-brass">{pct}% Density</p>
+                      <p className="text-micro font-mono text-brass">{pct}% Density</p>
                     </div>
                   </div>
 
@@ -247,7 +247,7 @@ export default function DashboardOverviewPage() {
               <h3 className="font-serif text-subhead tracking-tight text-ink">
                 {t.recentActivity}
               </h3>
-              <span className="text-[10px] font-mono text-status-occupied flex items-center gap-1">
+              <span className="text-micro font-mono text-status-occupied flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-status-occupied animate-pulse" />
                 Live Log
               </span>
@@ -257,25 +257,25 @@ export default function DashboardOverviewPage() {
               <div className="border-l-2 border-brass pl-3 py-1 space-y-0.5">
                 <p className="font-medium text-ink">Remittance Realized: Rs. 43,000</p>
                 <p className="text-caption text-ink-muted">Muhammad Hamza (Suite #101) via Meezan IBFT.</p>
-                <p className="text-[10px] font-mono text-zinc-400">Today, 11:20 AM</p>
+                <p className="text-micro font-mono text-zinc-400">Today, 11:20 AM</p>
               </div>
 
               <div className="border-l-2 border-zinc-400 pl-3 py-1 space-y-0.5">
                 <p className="font-medium text-ink">Visitor Check-in Recorded</p>
                 <p className="text-caption text-ink-muted">Chaudhry Riaz Ahmad (Guest of Room #101).</p>
-                <p className="text-[10px] font-mono text-zinc-400">Today, 09:45 AM</p>
+                <p className="text-micro font-mono text-zinc-400">Today, 09:45 AM</p>
               </div>
 
               <div className="border-l-2 border-emerald-600 pl-3 py-1 space-y-0.5">
                 <p className="font-medium text-ink">Biometric Attendance Cleared</p>
                 <p className="text-caption text-ink-muted">All 5 staff members checked in on duty.</p>
-                <p className="text-[10px] font-mono text-zinc-400">Today, 08:30 AM</p>
+                <p className="text-micro font-mono text-zinc-400">Today, 08:30 AM</p>
               </div>
 
               <div className="border-l-2 border-amber-600 pl-3 py-1 space-y-0.5">
                 <p className="font-medium text-ink">Arrears Rollover Logged</p>
                 <p className="text-caption text-ink-muted">Daniyal Farooq (Suite #103) balance Rs. 44,000.</p>
-                <p className="text-[10px] font-mono text-zinc-400">Yesterday, 06:00 PM</p>
+                <p className="text-micro font-mono text-zinc-400">Yesterday, 06:00 PM</p>
               </div>
             </div>
           </div>

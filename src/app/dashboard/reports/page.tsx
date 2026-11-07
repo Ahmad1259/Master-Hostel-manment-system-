@@ -106,7 +106,7 @@ export default function ReportsPage() {
           <p className="text-2xl font-serif text-ink tracking-tight font-medium font-tabular">
             {formatCurrency(grossInflow)}
           </p>
-          <p className="text-[11px] font-mono text-ink-muted">
+          <p className="text-micro font-mono text-ink-muted">
             Fee &amp; Ancillary Revenue
           </p>
         </div>
@@ -116,7 +116,7 @@ export default function ReportsPage() {
           <p className="text-2xl font-serif text-status-unpaid tracking-tight font-medium font-tabular">
             {formatCurrency(totalExpenseAmount)}
           </p>
-          <p className="text-[11px] font-mono text-ink-muted">
+          <p className="text-micro font-mono text-ink-muted">
             Utilities, Groceries &amp; Upkeep
           </p>
         </div>
@@ -126,7 +126,7 @@ export default function ReportsPage() {
           <p className="text-2xl font-serif text-emerald-800 tracking-tight font-medium font-tabular">
             {formatCurrency(netSurplus)}
           </p>
-          <p className="text-[11px] font-mono text-emerald-700">
+          <p className="text-micro font-mono text-emerald-700">
             {profitMargin}% Operating Margin
           </p>
         </div>
@@ -136,7 +136,7 @@ export default function ReportsPage() {
           <p className="text-2xl font-serif text-brass tracking-tight font-medium font-tabular">
             {formatCurrency(partners.reduce((a, b) => a + b.totalWithdrawn, 0))}
           </p>
-          <p className="text-[11px] font-mono text-ink-muted">
+          <p className="text-micro font-mono text-ink-muted">
             {partners.length} Managing Partners
           </p>
         </div>
@@ -153,7 +153,7 @@ export default function ReportsPage() {
               Accounting Cycle: November 2026 • Verified under FBR Audit Standard #PK-GP-04
             </p>
           </div>
-          <span className="text-[11px] font-mono border border-border px-2 py-0.5 bg-canvas-subtle">
+          <span className="text-micro font-mono border border-border px-2 py-0.5 bg-canvas-subtle">
             Currency: PKR
           </span>
         </div>
@@ -231,7 +231,7 @@ export default function ReportsPage() {
                 {formatCurrency(netSurplus)}
               </span>
             </div>
-            <p className="text-[11px] text-ink-muted font-sans italic">
+            <p className="text-micro text-ink-muted font-sans italic">
               Surplus allocated to partner equity pool and reserve capital replenishment fund.
             </p>
           </div>
@@ -249,7 +249,7 @@ export default function ReportsPage() {
               Cap table, paid-in capital, and cumulative drawings distributions.
             </p>
           </div>
-          <span className="text-[11px] font-mono border border-border px-2 py-0.5 bg-canvas-subtle">
+          <span className="text-micro font-mono border border-border px-2 py-0.5 bg-canvas-subtle">
             Active Partners: {partners.length}
           </span>
         </div>
@@ -257,7 +257,7 @@ export default function ReportsPage() {
         <div className="overflow-x-auto">
           <table className="w-full text-left text-body border-collapse">
             <thead>
-              <tr className="border-b border-border bg-canvas-subtle text-[11px] font-mono text-ink-muted uppercase">
+              <tr className="border-b border-border bg-canvas-subtle text-micro font-mono text-ink-muted uppercase">
                 <th className="p-3 font-semibold">Partner Principal</th>
                 <th className="p-3 font-semibold">Equity Share %</th>
                 <th className="p-3 font-semibold">Total Paid-In Capital</th>
@@ -274,7 +274,7 @@ export default function ReportsPage() {
                       <p className="font-serif text-subhead font-medium text-ink">
                         {partner.name}
                       </p>
-                      <p className="text-[11px] text-ink-muted font-mono">
+                      <p className="text-micro text-ink-muted font-mono">
                         Partner Ref: {partner.id}
                       </p>
                     </td>

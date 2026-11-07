@@ -27,6 +27,7 @@ export interface RoomItem {
   capacity: number;
   monthlyRate: number;
   type: "SINGLE" | "DOUBLE" | "TRIPLE" | "DORMITORY";
+  isAc?: boolean;
   beds: BedItem[];
 }
 
@@ -57,6 +58,9 @@ export interface StudentItem {
   bedLabel: string;
   roomId: string;
   monthlyRate: number;
+  advancePaid?: number;
+  messStatus?: "ON" | "OFF";
+  messBill?: number;
   pendingArrears: number;
   laundryUsed: number;
   laundryQuota: number;
@@ -1084,5 +1088,116 @@ export const initialLaundryRecords: LaundryRecordItem[] = [
     submittedDate: "2026-11-06",
     status: "READY",
     notes: "Lab coats steam pressed",
+  },
+];
+
+export interface ComplaintItem {
+  id: string;
+  studentId: string;
+  studentName: string;
+  roomNumber: string;
+  category: "Plumbing" | "Electrical" | "Wi-Fi" | "Mess / Food" | "Housekeeping" | "Security";
+  title: string;
+  description: string;
+  priority: "LOW" | "MEDIUM" | "HIGH";
+  status: "OPEN" | "IN_PROGRESS" | "RESOLVED";
+  createdAt: string;
+  resolvedAt?: string;
+}
+
+export const initialComplaints: ComplaintItem[] = [
+  {
+    id: "cmp-001",
+    studentId: "std-002",
+    studentName: "Shahmir Ali Khan",
+    roomNumber: "102",
+    category: "Wi-Fi",
+    title: "Frequent packet loss in Room 102 desk corner",
+    description: "Repeated dropouts during university zoom lectures. Signal drops to 1 bar near window.",
+    priority: "HIGH",
+    status: "IN_PROGRESS",
+    createdAt: "2026-11-06 14:30",
+  },
+  {
+    id: "cmp-002",
+    studentId: "std-004",
+    studentName: "Daniyal Farooq",
+    roomNumber: "103",
+    category: "Plumbing",
+    title: "Ensuite mixer tap leaking water",
+    description: "Cold water tap in bathroom continuously drips overnight.",
+    priority: "MEDIUM",
+    status: "OPEN",
+    createdAt: "2026-11-07 09:15",
+  },
+  {
+    id: "cmp-003",
+    studentId: "std-001",
+    studentName: "Muhammad Hamza",
+    roomNumber: "101",
+    category: "Electrical",
+    title: "Study lamp socket switch replacement",
+    description: "Master switch on study desk sparking occasionally when plugging charger.",
+    priority: "HIGH",
+    status: "RESOLVED",
+    createdAt: "2026-11-04 18:00",
+    resolvedAt: "2026-11-05 11:20",
+  },
+  {
+    id: "cmp-004",
+    studentId: "std-007",
+    studentName: "Bilal Hassan",
+    roomNumber: "201",
+    category: "Mess / Food",
+    title: "Late mess serving request for medical lab students",
+    description: "Requesting warm dinner storage until 9:30 PM due to hospital clinical rotation hours.",
+    priority: "LOW",
+    status: "RESOLVED",
+    createdAt: "2026-11-03 21:00",
+    resolvedAt: "2026-11-04 10:00",
+  },
+];
+
+export interface ReferralRecord {
+  id: string;
+  hostelName: string;
+  ownerName: string;
+  city: string;
+  contact: string;
+  status: "PENDING" | "ACTIVE" | "PAID";
+  rewardAmount: number;
+  signupDate: string;
+}
+
+export const initialReferrals: ReferralRecord[] = [
+  {
+    id: "ref-001",
+    hostelName: "Al-Razi Scholars Executive Residency",
+    ownerName: "Malik Tariq Mehmood",
+    city: "Rawalpindi",
+    contact: "0300-8472911",
+    status: "PAID",
+    rewardAmount: 10000,
+    signupDate: "2026-10-14",
+  },
+  {
+    id: "ref-002",
+    hostelName: "Iqbal Heights Student Hostels",
+    ownerName: "Dr. Asad Qureshi",
+    city: "Islamabad (Sector H-12)",
+    contact: "0321-5582910",
+    status: "ACTIVE",
+    rewardAmount: 10000,
+    signupDate: "2026-10-28",
+  },
+  {
+    id: "ref-003",
+    hostelName: "Gulshan Residency for Girls",
+    ownerName: "Mrs. Shagufta Begum",
+    city: "Lahore (Garden Town)",
+    contact: "0333-4910283",
+    status: "PENDING",
+    rewardAmount: 10000,
+    signupDate: "2026-11-04",
   },
 ];

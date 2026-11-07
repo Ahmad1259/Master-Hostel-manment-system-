@@ -12,6 +12,8 @@ import {
   PartnerItem,
   VisitorItem,
   LaundryRecordItem,
+  ComplaintItem,
+  ReferralRecord,
   initialBranches,
   initialFloors,
   initialStudents,
@@ -22,6 +24,8 @@ import {
   initialPartners,
   initialVisitors,
   initialLaundryRecords,
+  initialComplaints,
+  initialReferrals,
 } from "./mock-data";
 import { Language, translations, Translations } from "./i18n";
 
@@ -42,15 +46,36 @@ interface AppContextType {
   partners: PartnerItem[];
   visitors: VisitorItem[];
   laundryRecords: LaundryRecordItem[];
+  complaints: ComplaintItem[];
+  referrals: ReferralRecord[];
+  saasTier: "BASIC" | "STANDARD" | "PREMIUM";
+  setSaasTier: (tier: "BASIC" | "STANDARD" | "PREMIUM") => void;
+  isOnboardingOpen: boolean;
+  setIsOnboardingOpen: (open: boolean) => void;
+  toast: { message: string; type?: "success" | "info" | "warning" | "error" } | null;
+  showToast: (message: string, type?: "success" | "info" | "warning" | "error") => void;
+  isOffline: boolean;
+  setIsOffline: (offline: boolean) => void;
   
   // Actions
   addFloor: (name: string, nameUrdu: string) => void;
-  addRoom: (floorId: string, roomNumber: string, capacity: number, monthlyRate: number, type: "SINGLE" | "DOUBLE" | "TRIPLE" | "DORMITORY") => void;
+  addRoom: (floorId: string, roomNumber: string, capacity: number, monthlyRate: number, type: "SINGLE" | "DOUBLE" | "TRIPLE" | "DORMITORY", isAc?: boolean) => void;
+  deleteRoom: (roomId: string) => void;
   allocateBed: (bedId: string, studentId: string, studentName: string) => void;
   deallocateBed: (bedId: string) => void;
   addStudent: (student: Omit<StudentItem, "id" | "userId" | "laundryUsed" | "laundryQuota">) => void;
+  updateStudent: (studentId: string, updates: Partial<StudentItem>) => void;
+  deleteStudent: (studentId: string) => void;
+  bulkSendRentReminder: (studentIds: string[]) => void;
+  bulkMarkPaid: (studentIds: string[]) => void;
+  toggleMessStatus: (studentId: string) => void;
+  updateMessBill: (studentId: string, bill: number) => void;
+  raiseComplaint: (complaint: Omit<ComplaintItem, "id" | "createdAt" | "status">) => void;
+  updateComplaintStatus: (complaintId: string, status: ComplaintItem["status"]) => void;
+  deleteComplaint: (complaintId: string) => void;
   transferStudentRoom: (studentId: string, newRoomNumber: string, newBedLabel: string, newMonthlyRate: number) => void;
   recordFeePayment: (invoiceId: string, amount: number, bankRef?: string) => void;
+  deletePayment: (invoiceId: string) => void;
   generateMonthlyInvoices: (month: string, year: number) => void;
   addExpense: (expense: Omit<ExpenseItem, "id">) => void;
   addAuxiliaryIncome: (income: Omit<AuxiliaryIncomeItem, "id">) => void;
@@ -78,6 +103,36 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [partners, setPartners] = useState<PartnerItem[]>(initialPartners);
   const [visitors, setVisitors] = useState<VisitorItem[]>(initialVisitors);
   const [laundryRecords, setLaundryRecords] = useState<LaundryRecordItem[]>(initialLaundryRecords);
+  const [complaints, setComplaints] = useState<ComplaintItem[]>(initialComplaints);
+  const [referrals, setReferrals] = useState<ReferralRecord[]>(initialReferrals);
+  const [saasTier, setSaasTier] = useState<"BASIC" | "STANDARD" | "PREMIUM">("STANDARD");
+  const [isOnboardingOpen, setIsOnboardingOpen] = useState(false);
+  const [toast, setToast] = useState<{ message: string; type?: "success" | "info" | "warning" | "error" } | null>(null);
+  const [isOffline, setIsOffline] = useState(false);
+
+  const showToast = (message: string, type: "success" | "info" | "warning" | "error" = "success") => {
+    setToast({ message, type });
+    setTimeout(() => {
+      setToast(null);
+    }, 3500);
+  };
+
+  useEffect(() => {
+    const handleOnline = () => {
+      setIsOffline(false);
+      showToast("Back online. Nothing was lost.", "success");
+    };
+    const handleOffline = () => {
+      setIsOffline(true);
+      showToast("Connection lost. Working in offline mode.", "warning");
+    };
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, []);
 
   // Sync html dir and lang attributes
   const setLanguage = (lang: Language) => {
@@ -117,7 +172,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     roomNumber: string,
     capacity: number,
     monthlyRate: number,
-    type: "SINGLE" | "DOUBLE" | "TRIPLE" | "DORMITORY"
+    type: "SINGLE" | "DOUBLE" | "TRIPLE" | "DORMITORY",
+    isAc: boolean = true
   ) => {
     const roomId = `room-${Date.now()}`;
     const labels = ["Bed A", "Bed B", "Bed C", "Bed D", "Bed E", "Bed F"];
@@ -142,6 +198,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
                 capacity,
                 monthlyRate,
                 type,
+                isAc,
                 beds,
               },
             ],
@@ -150,6 +207,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         return floor;
       })
     );
+    showToast(`Chamber ${roomNumber} added successfully.`, "success");
+  };
+
+  const deleteRoom = (roomId: string) => {
+    setFloors(
+      floors.map((floor) => ({
+        ...floor,
+        rooms: floor.rooms.filter((r) => r.id !== roomId),
+      }))
+    );
+    showToast("Chamber deleted from registry.", "info");
   };
 
   const allocateBed = (bedId: string, studentId: string, studentName: string) => {
@@ -192,8 +260,102 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       userId: `usr-${newId}`,
       laundryUsed: 0,
       laundryQuota: 30,
+      messStatus: studentData.messStatus || "ON",
+      messBill: studentData.messBill || 8500,
     };
     setStudents([...students, newStudent]);
+    showToast(`Resident ${studentData.name} enrolled.`, "success");
+  };
+
+  const updateStudent = (studentId: string, updates: Partial<StudentItem>) => {
+    setStudents((prev) =>
+      prev.map((s) => (s.id === studentId ? { ...s, ...updates } : s))
+    );
+  };
+
+  const deleteStudent = (studentId: string) => {
+    setStudents((prev) => prev.filter((s) => s.id !== studentId));
+    showToast("Resident removed from registry.", "info");
+  };
+
+  const bulkSendRentReminder = (studentIds: string[]) => {
+    showToast(`Dispatched payment reminders to ${studentIds.length} residents via SMS.`, "success");
+  };
+
+  const bulkMarkPaid = (studentIds: string[]) => {
+    setFeeInvoices((prev) =>
+      prev.map((inv) =>
+        studentIds.includes(inv.studentId)
+          ? {
+              ...inv,
+              status: "PAID",
+              paidAmount: inv.totalDue,
+              balanceDues: 0,
+              paymentDate: new Date().toISOString().split("T")[0],
+            }
+          : inv
+      )
+    );
+    showToast(`Marked ${studentIds.length} resident dues as Paid in full.`, "success");
+  };
+
+  const toggleMessStatus = (studentId: string) => {
+    setStudents((prev) =>
+      prev.map((s) => {
+        if (s.id === studentId) {
+          const nextStatus = s.messStatus === "OFF" ? "ON" : "OFF";
+          showToast(
+            `Mess turned ${nextStatus} for ${s.name}.`,
+            nextStatus === "ON" ? "success" : "info"
+          );
+          return { ...s, messStatus: nextStatus };
+        }
+        return s;
+      })
+    );
+  };
+
+  const updateMessBill = (studentId: string, bill: number) => {
+    setStudents((prev) =>
+      prev.map((s) => (s.id === studentId ? { ...s, messBill: bill } : s))
+    );
+    showToast("Mess charge updated.", "success");
+  };
+
+  const raiseComplaint = (complaintData: Omit<ComplaintItem, "id" | "createdAt" | "status">) => {
+    const newComplaint: ComplaintItem = {
+      ...complaintData,
+      id: `cmp-${Date.now().toString().slice(-4)}`,
+      status: "OPEN",
+      createdAt: new Date().toISOString().replace("T", " ").slice(0, 16),
+    };
+    setComplaints([newComplaint, ...complaints]);
+    showToast("Complaint registered and assigned to duty warden.", "success");
+  };
+
+  const updateComplaintStatus = (complaintId: string, status: ComplaintItem["status"]) => {
+    setComplaints((prev) =>
+      prev.map((c) =>
+        c.id === complaintId
+          ? {
+              ...c,
+              status,
+              resolvedAt: status === "RESOLVED" ? new Date().toISOString().replace("T", " ").slice(0, 16) : undefined,
+            }
+          : c
+      )
+    );
+    showToast(`Complaint status changed to ${status}.`, "info");
+  };
+
+  const deleteComplaint = (complaintId: string) => {
+    setComplaints((prev) => prev.filter((c) => c.id !== complaintId));
+    showToast("Complaint removed.", "info");
+  };
+
+  const deletePayment = (invoiceId: string) => {
+    setFeeInvoices((prev) => prev.filter((i) => i.id !== invoiceId));
+    showToast("Invoice deleted from ledger.", "info");
   };
 
   const transferStudentRoom = (
@@ -404,13 +566,34 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         partners,
         visitors,
         laundryRecords,
+        complaints,
+        referrals,
+        saasTier,
+        setSaasTier,
+        isOnboardingOpen,
+        setIsOnboardingOpen,
+        toast,
+        showToast,
+        isOffline,
+        setIsOffline,
         addFloor,
         addRoom,
+        deleteRoom,
         allocateBed,
         deallocateBed,
         addStudent,
+        updateStudent,
+        deleteStudent,
+        bulkSendRentReminder,
+        bulkMarkPaid,
+        toggleMessStatus,
+        updateMessBill,
+        raiseComplaint,
+        updateComplaintStatus,
+        deleteComplaint,
         transferStudentRoom,
         recordFeePayment,
+        deletePayment,
         generateMonthlyInvoices,
         addExpense,
         addAuxiliaryIncome,

@@ -2,304 +2,353 @@
 
 import React, { useState } from "react";
 import { useApp } from "../../../lib/store";
+import { formatCurrency } from "../../../lib/utils";
+import { useThrottle } from "../../../hooks/use-throttle";
+import { LockedFeatureBadge } from "../../../components/ui/tier-badge";
 import hostelConfig from "../../../../hostel.config";
-import { formatCurrency, formatDate } from "../../../lib/utils";
 import {
   PieChart,
   Download,
   Printer,
   TrendingUp,
-  TrendingDown,
-  Building,
-  ShieldCheck,
-  Briefcase,
+  Building2,
+  Users,
   Layers,
+  Receipt,
+  CheckCircle2,
+  Lock,
+  FileSpreadsheet,
 } from "lucide-react";
 
 export default function ReportsPage() {
-  const {
-    feeInvoices,
-    expenses,
-    auxiliaryIncome,
-    partners,
-    currentBranch,
-    t,
-  } = useApp();
+  const { feeInvoices, floors, students, expenses, auxiliaryIncome, currentBranch, saasTier, showToast } = useApp();
 
-  const totalFeeCollected = feeInvoices.reduce((acc, inv) => acc + inv.paidAmount, 0);
-  const totalAuxiliary = auxiliaryIncome.reduce((acc, aux) => acc + aux.amount, 0);
-  const grossInflow = totalFeeCollected + totalAuxiliary;
+  const [activeTab, setActiveTab] = useState<"collection" | "occupancy">("collection");
 
-  const totalExpenseAmount = expenses.reduce((acc, exp) => acc + exp.amount, 0);
-  const netSurplus = grossInflow - totalExpenseAmount;
-  const profitMargin = grossInflow > 0 ? ((netSurplus / grossInflow) * 100).toFixed(1) : "0";
+  // Collection Report Computations
+  const totalBilled = feeInvoices.reduce((acc, inv) => acc + inv.totalDue, 0);
+  const totalCollected = feeInvoices.reduce((acc, inv) => acc + inv.paidAmount, 0);
+  const totalPending = feeInvoices.reduce((acc, inv) => acc + inv.balanceDues, 0);
+  const collectionRate = totalBilled > 0 ? Math.round((totalCollected / totalBilled) * 100) : 0;
 
-  const handlePrint = () => {
-    window.print();
-  };
+  // Occupancy Report Computations
+  let totalBeds = 0;
+  let occupiedBeds = 0;
+  let acBedsTotal = 0;
+  let acBedsOccupied = 0;
 
-  const handleExportCSV = () => {
-    const headers = ["Category / Item", "Ledger Section", "Audited Value (PKR)"];
+  floors.forEach((f) => {
+    f.rooms.forEach((r) => {
+      totalBeds += r.capacity;
+      const occ = r.beds.filter((b) => b.status === "OCCUPIED").length;
+      occupiedBeds += occ;
+      if (r.isAc) {
+        acBedsTotal += r.capacity;
+        acBedsOccupied += occ;
+      }
+    });
+  });
+
+  const vacantBeds = Math.max(0, totalBeds - occupiedBeds);
+  const overallOccupancyRate = totalBeds > 0 ? Math.round((occupiedBeds / totalBeds) * 100) : 0;
+
+  // Throttled CSV Export (UX Pattern #8)
+  const handleExportCSV = useThrottle(() => {
     const rows = [
-      ["Gross Resident Accommodation Fee", "Revenue", totalFeeCollected],
-      ["Ancillary Provisions & Services", "Revenue", totalAuxiliary],
-      ["Total Gross Inflow", "Summary", grossInflow],
-      ...expenses.map((e) => [`"${e.title}"`, `Expense: ${e.category}`, -e.amount]),
-      ["Total Operating Expenditures", "Summary", -totalExpenseAmount],
-      ["Net Audited Operating Surplus", "Profit/Loss", netSurplus],
+      ["Metric / Category", "Audited Figures (PKR / Count)"],
+      ["Total Rent Invoiced", totalBilled],
+      ["Total Rent Collected", totalCollected],
+      ["Total Pending Receivables", totalPending],
+      ["Collection Efficiency Rate", `${collectionRate}%`],
+      ["Total Campus Capacity (Beds)", totalBeds],
+      ["Total Occupied Beds", occupiedBeds],
+      ["Total Vacant Beds", vacantBeds],
+      ["Overall Occupancy Rate", `${overallOccupancyRate}%`],
     ];
 
-    const csvContent =
-      "data:text/csv;charset=utf-8," +
-      [headers.join(","), ...rows.map((e) => e.join(","))].join("\n");
+    const csvContent = "data:text/csv;charset=utf-8," + rows.map((e) => e.join(",")).join("\n");
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
-    link.setAttribute(
-      "download",
-      `PL_Statement_${currentBranch.name.replace(/\s+/g, "_")}_${new Date().toISOString().split("T")[0]}.csv`
-    );
+    link.setAttribute("download", `Hostel_Operational_Report_${Date.now()}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-  };
+
+    showToast("Audited CSV statement downloaded.", "success");
+  }, 1000);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-in fade-in duration-150">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-border">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-200">
         <div>
-          <span className="text-caption font-mono uppercase text-brass tracking-widest">
-            Module 06 • Fiscal P&amp;L &amp; Corporate Equity
+          <span className="text-xs font-semibold text-blue-600 uppercase tracking-wide">
+            Executive Analytics &amp; Compliance
           </span>
-          <h1 className="font-serif text-title tracking-tight text-ink mt-0.5">
-            {t.reportsTitle}
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 mt-1">
+            Hostel Operational &amp; Financial Reports
           </h1>
-          <p className="text-body text-ink-muted">
-            {t.reportsSubtitle}
+          <p className="text-sm text-slate-600 mt-0.5">
+            Real-time collection efficiency, occupancy metrics, and P&amp;L audit statements.
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        {/* Throttled Export Buttons (UX Pattern #8) */}
+        <div className="flex items-center gap-2">
           <button
+            type="button"
             onClick={handleExportCSV}
-            className="inline-flex items-center gap-2 border border-border bg-canvas-surface hover:bg-canvas-subtle text-ink px-3.5 py-2 text-caption font-medium uppercase tracking-wider transition-colors"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 rounded-lg shadow-xs transition-colors"
           >
-            <Download className="w-3.5 h-3.5" />
-            <span>Export Financial CSV</span>
+            <Download className="w-3.5 h-3.5 text-slate-500" />
+            <span>Export CSV</span>
           </button>
-
           <button
-            onClick={handlePrint}
-            className="inline-flex items-center gap-2 bg-brass hover:bg-brass-hover text-white px-4 py-2 text-caption font-medium uppercase tracking-wider transition-colors shadow-xs"
+            type="button"
+            onClick={() => window.print()}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 rounded-lg shadow-xs transition-colors"
           >
             <Printer className="w-3.5 h-3.5" />
-            <span>Print Financial Statement</span>
+            <span>Print Report</span>
           </button>
         </div>
       </div>
 
-      {/* Real-Time P&L Summary Dashboard */}
-      <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-        <div className="border border-border bg-canvas-surface p-4 space-y-1">
-          <span className="text-caption text-ink-muted">Gross Realized Inflows:</span>
-          <p className="text-2xl font-serif text-ink tracking-tight font-medium font-tabular">
-            {formatCurrency(grossInflow)}
-          </p>
-          <p className="text-micro font-mono text-ink-muted">
-            Fee &amp; Ancillary Revenue
-          </p>
-        </div>
-
-        <div className="border border-border bg-canvas-surface p-4 space-y-1">
-          <span className="text-caption text-ink-muted">Operating Expenditures:</span>
-          <p className="text-2xl font-serif text-status-unpaid tracking-tight font-medium font-tabular">
-            {formatCurrency(totalExpenseAmount)}
-          </p>
-          <p className="text-micro font-mono text-ink-muted">
-            Utilities, Groceries &amp; Upkeep
-          </p>
-        </div>
-
-        <div className="border border-border bg-canvas-surface p-4 space-y-1">
-          <span className="text-caption text-ink-muted">Net Operating Surplus:</span>
-          <p className="text-2xl font-serif text-emerald-800 tracking-tight font-medium font-tabular">
-            {formatCurrency(netSurplus)}
-          </p>
-          <p className="text-micro font-mono text-emerald-700">
-            {profitMargin}% Operating Margin
-          </p>
-        </div>
-
-        <div className="border border-border bg-canvas-surface p-4 space-y-1">
-          <span className="text-caption text-ink-muted">Partner Equity Distributed:</span>
-          <p className="text-2xl font-serif text-brass tracking-tight font-medium font-tabular">
-            {formatCurrency(partners.reduce((a, b) => a + b.totalWithdrawn, 0))}
-          </p>
-          <p className="text-micro font-mono text-ink-muted">
-            {partners.length} Managing Partners
-          </p>
-        </div>
+      {/* Report Type Selector Tabs */}
+      <div className="flex items-center gap-2 border-b border-slate-200 pb-3">
+        <button
+          type="button"
+          onClick={() => setActiveTab("collection")}
+          className={`px-4 py-2 rounded-lg text-xs font-bold transition-colors ${
+            activeTab === "collection"
+              ? "bg-blue-600 text-white shadow-xs"
+              : "text-slate-600 hover:bg-slate-100"
+          }`}
+        >
+          1. Rent &amp; Fee Collection Report
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab("occupancy")}
+          className={`px-4 py-2 rounded-lg text-xs font-bold transition-colors ${
+            activeTab === "occupancy"
+              ? "bg-blue-600 text-white shadow-xs"
+              : "text-slate-600 hover:bg-slate-100"
+          }`}
+        >
+          2. Bed Capacity &amp; Occupancy Report
+        </button>
       </div>
 
-      {/* Comprehensive Statement of Operations (P&L Sheet) */}
-      <div className="border border-border bg-canvas-surface p-6 space-y-6">
-        <div className="flex items-center justify-between pb-3 border-b border-border">
-          <div>
-            <h3 className="font-serif text-subhead tracking-tight text-ink font-medium">
-              Comprehensive Statement of Operational Profit &amp; Loss
-            </h3>
-            <p className="text-caption text-ink-muted font-mono">
-              Accounting Cycle: November 2026 • Verified under FBR Audit Standard #PK-GP-04
-            </p>
-          </div>
-          <span className="text-micro font-mono border border-border px-2 py-0.5 bg-canvas-subtle">
-            Currency: PKR
-          </span>
-        </div>
+      {/* Tab 1: Collection Report */}
+      {activeTab === "collection" && (
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs">
+              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide block">
+                Total Billed
+              </span>
+              <p className="text-2xl sm:text-3xl font-bold text-slate-900 mt-1 tabular-nums">
+                {formatCurrency(totalBilled)}
+              </p>
+              <p className="text-[11px] text-slate-500 mt-1">100% of generated invoices</p>
+            </div>
 
-        <div className="divide-y divide-border text-caption font-mono">
-          {/* Revenue Section */}
-          <div className="py-3 space-y-2">
-            <span className="font-serif text-subhead text-ink uppercase tracking-wider block font-medium">
-              1. Operating Inflows (Gross Receipts)
-            </span>
-            <div className="flex justify-between pl-4 text-ink-muted">
-              <span>Standard Resident Accommodation Collections:</span>
-              <span className="text-ink font-medium">{formatCurrency(totalFeeCollected)}</span>
-            </div>
-            <div className="flex justify-between pl-4 text-ink-muted">
-              <span>Ancillary Provisions Dispensary &amp; Tuck Shop:</span>
-              <span className="text-ink font-medium">
-                {formatCurrency(
-                  auxiliaryIncome
-                    .filter((a) => a.source === "TUCK_SHOP")
-                    .reduce((x, y) => x + y.amount, 0)
-                )}
+            <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs">
+              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide block">
+                Total Collected
               </span>
+              <p className="text-2xl sm:text-3xl font-bold text-emerald-600 mt-1 tabular-nums">
+                {formatCurrency(totalCollected)}
+              </p>
+              <p className="text-[11px] text-emerald-600 font-semibold mt-1">
+                {collectionRate}% collection rate achieved
+              </p>
             </div>
-            <div className="flex justify-between pl-4 text-ink-muted">
-              <span>Express Steam Press &amp; Laundry Service Surcharges:</span>
-              <span className="text-ink font-medium">
-                {formatCurrency(
-                  auxiliaryIncome
-                    .filter((a) => a.source === "LAUNDRY")
-                    .reduce((x, y) => x + y.amount, 0)
-                )}
+
+            <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs">
+              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide block">
+                Pending Arrears
               </span>
-            </div>
-            <div className="flex justify-between pl-4 text-ink-muted">
-              <span>Luggage Vault &amp; Locker Rental Inflow:</span>
-              <span className="text-ink font-medium">
-                {formatCurrency(
-                  auxiliaryIncome
-                    .filter((a) => a.source === "LOCKER_RENT")
-                    .reduce((x, y) => x + y.amount, 0)
-                )}
-              </span>
-            </div>
-            <div className="flex justify-between pt-2 border-t border-border font-bold text-ink">
-              <span>Aggregated Gross Operational Revenue:</span>
-              <span className="text-brass">{formatCurrency(grossInflow)}</span>
+              <p className="text-2xl sm:text-3xl font-bold text-amber-600 mt-1 tabular-nums">
+                {formatCurrency(totalPending)}
+              </p>
+              <p className="text-[11px] text-slate-500 mt-1">Due for follow-up reminders</p>
             </div>
           </div>
 
-          {/* Expenses Section */}
-          <div className="py-3 space-y-2">
-            <span className="font-serif text-subhead text-ink uppercase tracking-wider block font-medium">
-              2. Operational &amp; Facility Expenditures
-            </span>
-            {expenses.map((exp) => (
-              <div key={exp.id} className="flex justify-between pl-4 text-ink-muted">
-                <span>{exp.title} ({exp.category}):</span>
-                <span className="text-red-700 font-medium">
-                  -{formatCurrency(exp.amount)}
-                </span>
+          {/* Collection Ledger Summary Table */}
+          <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-xs space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-base font-bold text-slate-900">
+                  Monthly Inflow vs Receivables Breakdown
+                </h3>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Reconciled against commercial Meezan Bank deposits and cash vouchers.
+                </p>
               </div>
-            ))}
-            <div className="flex justify-between pt-2 border-t border-border font-bold text-ink">
-              <span>Aggregated Operational Outflows:</span>
-              <span className="text-status-unpaid">-{formatCurrency(totalExpenseAmount)}</span>
             </div>
-          </div>
 
-          {/* Net Margin Section */}
-          <div className="py-4 space-y-1 bg-canvas-subtle p-4 border border-border">
-            <div className="flex justify-between text-base font-serif font-bold text-ink">
-              <span>Audited Net Operating Surplus:</span>
-              <span className="text-emerald-800 font-mono">
-                {formatCurrency(netSurplus)}
-              </span>
-            </div>
-            <p className="text-micro text-ink-muted font-sans italic">
-              Surplus allocated to partner equity pool and reserve capital replenishment fund.
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Managing Partner Equity Ledger */}
-      <div className="border border-border bg-canvas-surface p-6 space-y-4">
-        <div className="flex items-center justify-between pb-3 border-b border-border">
-          <div>
-            <h3 className="font-serif text-subhead tracking-tight text-ink font-medium">
-              {t.partnerEquityLedger}
-            </h3>
-            <p className="text-caption text-ink-muted font-mono">
-              Cap table, paid-in capital, and cumulative drawings distributions.
-            </p>
-          </div>
-          <span className="text-micro font-mono border border-border px-2 py-0.5 bg-canvas-subtle">
-            Active Partners: {partners.length}
-          </span>
-        </div>
-
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-body border-collapse">
-            <thead>
-              <tr className="border-b border-border bg-canvas-subtle text-micro font-mono text-ink-muted uppercase">
-                <th className="p-3 font-semibold">Partner Principal</th>
-                <th className="p-3 font-semibold">Equity Share %</th>
-                <th className="p-3 font-semibold">Total Paid-In Capital</th>
-                <th className="p-3 font-semibold">Cumulative Drawings</th>
-                <th className="p-3 font-semibold text-right">Net Residual Equity</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border font-mono text-caption">
-              {partners.map((partner) => {
-                const residual = partner.totalInvested - partner.totalWithdrawn;
-                return (
-                  <tr key={partner.id} className="hover:bg-canvas-subtle/50 transition-colors">
-                    <td className="p-3 font-sans">
-                      <p className="font-serif text-subhead font-medium text-ink">
-                        {partner.name}
-                      </p>
-                      <p className="text-micro text-ink-muted font-mono">
-                        Partner Ref: {partner.id}
-                      </p>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs border-collapse">
+                <thead>
+                  <tr className="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold uppercase text-[11px]">
+                    <th className="px-4 py-3">Billing Cycle</th>
+                    <th className="px-4 py-3 text-right">Invoices Issued</th>
+                    <th className="px-4 py-3 text-right">Total Invoiced</th>
+                    <th className="px-4 py-3 text-right">Collected (Cash/Bank)</th>
+                    <th className="px-4 py-3 text-right">Balance Due</th>
+                    <th className="px-4 py-3 text-center">Collection %</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 font-medium">
+                  <tr className="hover:bg-slate-50/60">
+                    <td className="px-4 py-3 font-bold text-slate-900">November 2026 (Current)</td>
+                    <td className="px-4 py-3 text-right font-mono tabular-nums">{feeInvoices.length}</td>
+                    <td className="px-4 py-3 text-right font-mono font-bold text-slate-900 tabular-nums">
+                      {formatCurrency(totalBilled)}
                     </td>
-
-                    <td className="p-3 font-medium text-brass">
-                      {partner.sharePercentage.toFixed(1)}%
+                    <td className="px-4 py-3 text-right font-mono font-bold text-emerald-700 tabular-nums">
+                      {formatCurrency(totalCollected)}
                     </td>
-
-                    <td className="p-3 text-ink">
-                      {formatCurrency(partner.totalInvested)}
+                    <td className="px-4 py-3 text-right font-mono font-bold text-amber-600 tabular-nums">
+                      {formatCurrency(totalPending)}
                     </td>
-
-                    <td className="p-3 text-status-unpaid">
-                      {formatCurrency(partner.totalWithdrawn)}
-                    </td>
-
-                    <td className="p-3 text-right font-medium text-emerald-800">
-                      {formatCurrency(residual)}
+                    <td className="px-4 py-3 text-center font-bold text-blue-600 tabular-nums">
+                      {collectionRate}%
                     </td>
                   </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
+      )}
+
+      {/* Tab 2: Occupancy Report */}
+      {activeTab === "occupancy" && (
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+            <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs">
+              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide block">
+                Total Capacity
+              </span>
+              <p className="text-3xl font-bold text-slate-900 mt-1 tabular-nums">
+                {totalBeds} Beds
+              </p>
+              <p className="text-[11px] text-slate-500 mt-1">Gulberg campus building</p>
+            </div>
+
+            <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs">
+              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide block">
+                Occupied
+              </span>
+              <p className="text-3xl font-bold text-blue-600 mt-1 tabular-nums">
+                {occupiedBeds} Beds
+              </p>
+              <p className="text-[11px] text-blue-600 font-semibold mt-1">
+                {overallOccupancyRate}% occupancy rate
+              </p>
+            </div>
+
+            <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs">
+              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide block">
+                Vacant Beds
+              </span>
+              <p className="text-3xl font-bold text-emerald-600 mt-1 tabular-nums">
+                {vacantBeds} Beds
+              </p>
+              <p className="text-[11px] text-slate-500 mt-1">Available for new admissions</p>
+            </div>
+
+            <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs">
+              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide block">
+                Inverter AC Rooms
+              </span>
+              <p className="text-3xl font-bold text-slate-900 mt-1 tabular-nums">
+                {acBedsOccupied} / {acBedsTotal}
+              </p>
+              <p className="text-[11px] text-slate-500 mt-1">AC chamber occupancy</p>
+            </div>
+          </div>
+
+          {/* Floor-by-Floor Capacity Table */}
+          <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-xs space-y-4">
+            <h3 className="text-base font-bold text-slate-900">
+              Floor-by-Floor Capacity Matrix
+            </h3>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs border-collapse">
+                <thead>
+                  <tr className="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold uppercase text-[11px]">
+                    <th className="px-4 py-3">Floor Level</th>
+                    <th className="px-4 py-3 text-right">Total Chambers</th>
+                    <th className="px-4 py-3 text-right">Total Bed Capacity</th>
+                    <th className="px-4 py-3 text-right">Occupied Beds</th>
+                    <th className="px-4 py-3 text-right">Vacant Beds</th>
+                    <th className="px-4 py-3 text-center">Occupancy %</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {floors.map((floor) => {
+                    let cap = 0;
+                    let occ = 0;
+                    floor.rooms.forEach((r) => {
+                      cap += r.capacity;
+                      occ += r.beds.filter((b) => b.status === "OCCUPIED").length;
+                    });
+                    const vac = Math.max(0, cap - occ);
+                    const pct = cap > 0 ? Math.round((occ / cap) * 100) : 0;
+
+                    return (
+                      <tr key={floor.id} className="hover:bg-slate-50/60 font-medium">
+                        <td className="px-4 py-3 font-bold text-slate-900">
+                          {floor.name} ({floor.nameUrdu})
+                        </td>
+                        <td className="px-4 py-3 text-right font-mono tabular-nums">{floor.rooms.length}</td>
+                        <td className="px-4 py-3 text-right font-mono tabular-nums">{cap}</td>
+                        <td className="px-4 py-3 text-right font-mono font-bold text-blue-600 tabular-nums">{occ}</td>
+                        <td className="px-4 py-3 text-right font-mono font-bold text-emerald-600 tabular-nums">{vac}</td>
+                        <td className="px-4 py-3 text-center font-bold text-slate-800 tabular-nums">{pct}%</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Tier-Based Locked Feature Section (UX Pattern #14) */}
+      <div className="bg-slate-100/60 border border-slate-200 rounded-xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-start gap-3">
+          <div className="w-9 h-9 rounded-lg bg-amber-50 text-amber-700 flex items-center justify-center shrink-0">
+            <Lock className="w-4 h-4" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <h4 className="text-sm font-bold text-slate-900">
+                FBR Regulatory Tax Statement &amp; Audit Schedule
+              </h4>
+              <LockedFeatureBadge featureName="Tax Audit" />
+            </div>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Automated withholding tax deductions, P&amp;L balance sheets, and provincial revenue authority exports.
+            </p>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => showToast("Upgrade to Standard or Premium to unlock official FBR tax exports.", "info")}
+          className="px-4 py-2 bg-white border border-slate-300 hover:bg-slate-50 text-slate-800 text-xs font-semibold rounded-lg shadow-2xs transition-colors self-start sm:self-auto"
+        >
+          Unlock on Standard+
+        </button>
       </div>
     </div>
   );

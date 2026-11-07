@@ -1,8 +1,10 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { useApp } from "../../../lib/store";
 import { formatCurrency } from "../../../lib/utils";
+import { RoomItem, BedItem } from "../../../lib/mock-data";
+import { DestructiveConfirmModal } from "../../../components/ui/destructive-modal";
 import {
   Layers,
   Plus,
@@ -14,7 +16,11 @@ import {
   Filter,
   X,
   UserPlus,
-  Maximize2,
+  Trash2,
+  Wind,
+  Check,
+  DoorOpen,
+  DollarSign,
 } from "lucide-react";
 
 export default function InventoryPage() {
@@ -22,377 +28,427 @@ export default function InventoryPage() {
     floors,
     addFloor,
     addRoom,
+    deleteRoom,
     allocateBed,
     deallocateBed,
     students,
-    t,
     currentBranch,
+    showToast,
   } = useApp();
 
   const [selectedFloorId, setSelectedFloorId] = useState<string>("ALL");
-  const [roomTypeFilter, setRoomTypeFilter] = useState<string>("ALL");
-  const [showAddFloorModal, setShowAddFloorModal] = useState(false);
-  const [showAddRoomModal, setShowAddRoomModal] = useState(false);
+  const [acFilter, setAcFilter] = useState<string>("ALL");
+  const [occupancyFilter, setOccupancyFilter] = useState<string>("ALL");
+  const [searchQuery, setSearchQuery] = useState<string>("");
 
-  // New Floor Form state
+  // Modals state
+  const [showAddRoomModal, setShowAddRoomModal] = useState(false);
+  const [showAddFloorModal, setShowAddFloorModal] = useState(false);
+  const [roomToDelete, setRoomToDelete] = useState<RoomItem | null>(null);
+
+  // New Room Form State
+  const [newRoom, setNewRoom] = useState({
+    floorId: floors[0]?.id || "",
+    roomNumber: "",
+    capacity: 2,
+    monthlyRate: 32000,
+    type: "DOUBLE" as "SINGLE" | "DOUBLE" | "TRIPLE" | "DORMITORY",
+    isAc: true,
+  });
+
+  // New Floor Form State
   const [newFloorName, setNewFloorName] = useState("");
   const [newFloorNameUrdu, setNewFloorNameUrdu] = useState("");
 
-  // New Room Form state
-  const [targetFloorId, setTargetFloorId] = useState(floors[0]?.id || "");
-  const [roomNumber, setRoomNumber] = useState("");
-  const [capacity, setCapacity] = useState(2);
-  const [monthlyRate, setMonthlyRate] = useState(32000);
-  const [roomType, setRoomType] = useState<"SINGLE" | "DOUBLE" | "TRIPLE" | "DORMITORY">("DOUBLE");
+  // Bed Allocation Modal (UX Pattern #1: Optimistic UI updates)
+  const [selectedBedForAllocation, setSelectedBedForAllocation] = useState<BedItem | null>(null);
+  const [selectedStudentForBed, setSelectedStudentForBed] = useState<string>("");
 
-  // Bed allocation modal
-  const [allocatingBedId, setAllocatingBedId] = useState<string | null>(null);
-  const [selectedStudentId, setSelectedStudentId] = useState<string>("");
+  // Filtered rooms
+  const filteredRooms = useMemo(() => {
+    const list: (RoomItem & { floorName: string })[] = [];
+    floors.forEach((floor) => {
+      if (selectedFloorId !== "ALL" && floor.id !== selectedFloorId) return;
 
-  const handleCreateFloor = (e: React.FormEvent) => {
+      floor.rooms.forEach((room) => {
+        // AC filter
+        if (acFilter === "AC" && !room.isAc) return;
+        if (acFilter === "NON_AC" && room.isAc) return;
+
+        // Occupancy filter
+        const occupied = room.beds.filter((b) => b.status === "OCCUPIED").length;
+        if (occupancyFilter === "VACANT" && occupied === room.capacity) return;
+        if (occupancyFilter === "FULL" && occupied < room.capacity) return;
+
+        // Search query
+        if (searchQuery && !room.roomNumber.toLowerCase().includes(searchQuery.toLowerCase())) {
+          return;
+        }
+
+        list.push({ ...room, floorName: floor.name });
+      });
+    });
+    return list;
+  }, [floors, selectedFloorId, acFilter, occupancyFilter, searchQuery]);
+
+  // Handle Add Room Submit
+  const handleAddRoom = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newFloorName) return;
-    addFloor(newFloorName, newFloorNameUrdu);
-    setNewFloorName("");
-    setNewFloorNameUrdu("");
-    setShowAddFloorModal(false);
-  };
+    if (!newRoom.roomNumber || !newRoom.floorId) return;
 
-  const handleCreateRoom = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!roomNumber) return;
-    addRoom(targetFloorId, roomNumber, capacity, monthlyRate, roomType);
-    setRoomNumber("");
+    addRoom(
+      newRoom.floorId,
+      newRoom.roomNumber,
+      newRoom.capacity,
+      newRoom.monthlyRate,
+      newRoom.type,
+      newRoom.isAc
+    );
+
     setShowAddRoomModal(false);
+    setNewRoom({
+      floorId: floors[0]?.id || "",
+      roomNumber: "",
+      capacity: 2,
+      monthlyRate: 32000,
+      type: "DOUBLE",
+      isAc: true,
+    });
   };
 
+  // Optimistic Bed Allocation (UX Pattern #1)
   const handleConfirmBedAllocation = () => {
-    if (!allocatingBedId || !selectedStudentId) return;
-    const std = students.find((s) => s.id === selectedStudentId);
-    if (std) {
-      allocateBed(allocatingBedId, std.id, std.name);
-    }
-    setAllocatingBedId(null);
-    setSelectedStudentId("");
+    if (!selectedBedForAllocation || !selectedStudentForBed) return;
+    const std = students.find((s) => s.id === selectedStudentForBed);
+    if (!std) return;
+
+    // Optimistically update instantly
+    allocateBed(selectedBedForAllocation.id, std.id, std.name);
+    showToast(`Bed assigned to ${std.name} instantly.`, "success");
+    setSelectedBedForAllocation(null);
+    setSelectedStudentForBed("");
   };
 
-  const filteredFloors = floors.filter(
-    (f) => selectedFloorId === "ALL" || f.id === selectedFloorId
-  );
+  // Optimistic Bed Deallocation (UX Pattern #1)
+  const handleVacateBed = (bed: BedItem) => {
+    deallocateBed(bed.id);
+    showToast(`Bed ${bed.bedLabel} is now vacant.`, "info");
+  };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-in fade-in duration-150">
       {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-border">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-200">
         <div>
-          <span className="text-caption font-mono uppercase text-brass tracking-widest">
-            Module 01 • Physical Assets
+          <span className="text-xs font-semibold text-blue-600 uppercase tracking-wide">
+            Chambers &amp; Accommodations
           </span>
-          <h1 className="font-serif text-title tracking-tight text-ink mt-0.5">
-            {t.inventoryTitle}
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 mt-1">
+            Rooms &amp; Beds Inventory
           </h1>
-          <p className="text-body text-ink-muted">
-            {t.inventorySubtitle}
+          <p className="text-sm text-slate-600 mt-0.5">
+            Capacity management, climate controls, and real-time bed slot allocations.
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5">
           <button
+            type="button"
             onClick={() => setShowAddFloorModal(true)}
-            className="inline-flex items-center gap-2 border border-border bg-canvas-surface hover:bg-canvas-subtle text-ink px-4 py-2 text-caption font-medium uppercase tracking-wider transition-colors"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 rounded-lg shadow-xs transition-colors"
+          >
+            <Plus className="w-3.5 h-3.5 text-slate-500" />
+            <span>Add Floor</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setShowAddRoomModal(true)}
+            className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-xs transition-colors"
           >
             <Plus className="w-3.5 h-3.5" />
-            <span>{t.btnAddFloor}</span>
+            <span>Add Chamber</span>
           </button>
+        </div>
+      </div>
 
-          <button
-            onClick={() => setShowAddRoomModal(true)}
-            className="inline-flex items-center gap-2 bg-brass hover:bg-brass-hover text-white px-4 py-2 text-caption font-medium uppercase tracking-wider transition-colors shadow-xs"
+      {/* Filter and Search Bar (UX Pattern #12) */}
+      <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-xs flex flex-col md:flex-row gap-3 items-center justify-between">
+        <div className="relative w-full md:w-72">
+          <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search room number..."
+            className="w-full text-xs font-medium pl-10 pr-4 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-600"
+          />
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
+          {/* Floor filter */}
+          <select
+            value={selectedFloorId}
+            onChange={(e) => setSelectedFloorId(e.target.value)}
+            className="text-xs font-semibold bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-slate-800 focus:outline-none"
           >
-            <Building className="w-3.5 h-3.5" />
-            <span>{t.btnCreateRoom}</span>
-          </button>
+            <option value="ALL">All Floors ({floors.length})</option>
+            {floors.map((f) => (
+              <option key={f.id} value={f.id}>
+                {f.name}
+              </option>
+            ))}
+          </select>
+
+          {/* AC / Non-AC filter */}
+          <select
+            value={acFilter}
+            onChange={(e) => setAcFilter(e.target.value)}
+            className="text-xs font-semibold bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-slate-800 focus:outline-none"
+          >
+            <option value="ALL">All Climate Types</option>
+            <option value="AC">Air-Conditioned (Inverter)</option>
+            <option value="NON_AC">Non-AC (Regular)</option>
+          </select>
+
+          {/* Occupancy filter */}
+          <select
+            value={occupancyFilter}
+            onChange={(e) => setOccupancyFilter(e.target.value)}
+            className="text-xs font-semibold bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-slate-800 focus:outline-none"
+          >
+            <option value="ALL">All Availability</option>
+            <option value="VACANT">Has Vacant Beds</option>
+            <option value="FULL">Fully Occupied</option>
+          </select>
         </div>
       </div>
 
-      {/* Filter Toolbar */}
-      <div className="flex flex-wrap items-center justify-between gap-4 border border-border bg-canvas-surface p-4">
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="flex items-center gap-2">
-            <span className="text-caption font-medium text-ink-muted">Tier:</span>
-            <select
-              value={selectedFloorId}
-              onChange={(e) => setSelectedFloorId(e.target.value)}
-              className="border border-border bg-canvas px-3 py-1.5 text-caption text-ink"
-            >
-              <option value="ALL">All Architectural Tiers</option>
-              {floors.map((f) => (
-                <option key={f.id} value={f.id}>
-                  {f.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <span className="text-caption font-medium text-ink-muted">Type:</span>
-            <select
-              value={roomTypeFilter}
-              onChange={(e) => setRoomTypeFilter(e.target.value)}
-              className="border border-border bg-canvas px-3 py-1.5 text-caption text-ink"
-            >
-              <option value="ALL">All Layout Types</option>
-              <option value="SINGLE">Single Executive</option>
-              <option value="DOUBLE">Double Scholars</option>
-              <option value="TRIPLE">Triple Residency</option>
-              <option value="DORMITORY">Fellowship Dormitory</option>
-            </select>
-          </div>
+      {/* Rooms Grid */}
+      {filteredRooms.length === 0 ? (
+        <div className="bg-white border border-slate-200 rounded-xl p-12 text-center text-slate-500">
+          <DoorOpen className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+          <p className="text-sm font-semibold text-slate-800">No chambers matching filters</p>
+          <p className="text-xs text-slate-500 mt-1">Try resetting the floor or climate filter.</p>
         </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          {filteredRooms.map((room) => {
+            const occupiedBedsCount = room.beds.filter((b) => b.status === "OCCUPIED").length;
+            const isFull = occupiedBedsCount === room.capacity;
 
-        <div className="flex items-center gap-4 text-caption text-ink-muted font-mono">
-          <div className="flex items-center gap-1.5">
-            <div className="w-2.5 h-2.5 bg-status-vacant rounded-xs" />
-            <span>Vacant</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <div className="w-2.5 h-2.5 bg-status-partial rounded-xs" />
-            <span>Partial</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <div className="w-2.5 h-2.5 bg-status-occupied rounded-xs" />
-            <span>Occupied</span>
-          </div>
-        </div>
-      </div>
+            return (
+              <div
+                key={room.id}
+                className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs flex flex-col justify-between space-y-4 hover:border-slate-300 transition-colors"
+              >
+                <div>
+                  {/* Top Bar: Room No, Floor, AC indicator & Delete */}
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-lg font-bold text-slate-900">
+                          Room {room.roomNumber}
+                        </h3>
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700">
+                          {room.type}
+                        </span>
+                        {room.isAc ? (
+                          <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-200">
+                            <Wind className="w-2.5 h-2.5 text-blue-600" />
+                            <span>AC</span>
+                          </span>
+                        ) : (
+                          <span className="text-[10px] text-slate-500 bg-slate-50 px-2 py-0.5 rounded-full border border-slate-200">
+                            Non-AC
+                          </span>
+                        )}
+                      </div>
+                      <span className="text-xs text-slate-500 mt-0.5 block">
+                        {room.floorName}
+                      </span>
+                    </div>
 
-      {/* Floors & Chambers List */}
-      <div className="space-y-6">
-        {filteredFloors.map((floor) => {
-          const roomsToShow = floor.rooms.filter(
-            (r) => roomTypeFilter === "ALL" || r.type === roomTypeFilter
-          );
-
-          return (
-            <div key={floor.id} className="border border-border bg-canvas-surface p-6 space-y-4">
-              <div className="flex items-center justify-between pb-3 border-b border-border">
-                <div className="flex items-center gap-2">
-                  <Layers className="w-4 h-4 text-brass" />
-                  <h3 className="font-serif text-subhead tracking-tight text-ink font-medium">
-                    {floor.name}
-                  </h3>
-                </div>
-                <span className="text-caption font-mono text-ink-muted">
-                  {roomsToShow.length} Chambers Registered
-                </span>
-              </div>
-
-              {roomsToShow.length === 0 ? (
-                <p className="text-caption text-ink-muted py-4 text-center">
-                  No rooms matching the selected filter in this tier.
-                </p>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {roomsToShow.map((room) => {
-                    const occupied = room.beds.filter((b) => b.status === "OCCUPIED").length;
-                    const isFull = occupied === room.capacity;
-                    const isPartial = occupied > 0 && !isFull;
-
-                    return (
-                      <div
-                        key={room.id}
-                        className="border border-border bg-canvas-subtle p-4 space-y-3 hover:border-zinc-400 transition-colors"
+                    <div className="flex items-center gap-1">
+                      <button
+                        type="button"
+                        onClick={() => setRoomToDelete(room)}
+                        className="p-1 rounded text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                        title="Delete Chamber"
                       >
-                        <div className="flex items-start justify-between pb-2 border-b border-border">
-                          <div>
-                            <span className="text-micro font-mono uppercase text-ink-muted">
-                              Suite
-                            </span>
-                            <h4 className="font-serif text-subhead text-ink font-semibold">
-                              #{room.roomNumber}
-                            </h4>
-                          </div>
-                          <div className="text-right">
-                            <span className="text-micro font-mono border border-border bg-canvas-surface px-1.5 py-0.5 text-ink-muted">
-                              {room.type}
-                            </span>
-                            <p className="text-caption font-medium text-brass mt-0.5">
-                              {formatCurrency(room.monthlyRate)}/mo
-                            </p>
-                          </div>
-                        </div>
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
 
-                        {/* Bed slots */}
-                        <div className="space-y-2">
-                          <p className="text-micro font-mono text-ink-muted uppercase">
-                            Bed Allocation ({occupied}/{room.capacity}):
-                          </p>
-                          <div className="grid grid-cols-1 gap-1.5">
-                            {room.beds.map((bed) => (
-                              <div
-                                key={bed.id}
-                                className={`p-2 border flex items-center justify-between text-caption ${
-                                  bed.status === "OCCUPIED"
-                                    ? "bg-zinc-100 border-zinc-200"
-                                    : "bg-canvas-surface border-border"
-                                }`}
-                              >
-                                <div>
-                                  <span className="font-mono font-medium text-ink mr-2">
-                                    {bed.bedLabel}
-                                  </span>
-                                  <span className="text-ink-muted text-micro">
-                                    {bed.status === "OCCUPIED"
-                                      ? bed.studentName
-                                      : "Available for Allocation"}
-                                  </span>
-                                </div>
+                  {/* Pricing and Capacity Status */}
+                  <div className="mt-3 py-2 px-3 bg-slate-50 rounded-lg flex items-center justify-between text-xs">
+                    <div>
+                      <span className="text-[10px] text-slate-400 uppercase font-semibold block">
+                        Monthly Rent
+                      </span>
+                      <span className="font-mono font-bold text-slate-900 tabular-nums">
+                        {formatCurrency(room.monthlyRate)}
+                      </span>
+                    </div>
 
-                                <div>
-                                  {bed.status === "OCCUPIED" ? (
-                                    <button
-                                      onClick={() => deallocateBed(bed.id)}
-                                      className="text-micro font-mono text-red-600 hover:underline"
-                                      title="Release Bed Slot"
-                                    >
-                                      Deallocate
-                                    </button>
-                                  ) : (
-                                    <button
-                                      onClick={() => {
-                                        setAllocatingBedId(bed.id);
-                                        setSelectedStudentId(students[0]?.id || "");
-                                      }}
-                                      className="text-micro font-mono text-brass hover:underline inline-flex items-center gap-1"
-                                    >
-                                      <UserPlus className="w-3 h-3" />
-                                      <span>Allocate</span>
-                                    </button>
-                                  )}
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
+                    <div className="text-right">
+                      <span className="text-[10px] text-slate-400 uppercase font-semibold block">
+                        Occupancy
+                      </span>
+                      <span
+                        className={`font-semibold tabular-nums ${
+                          isFull ? "text-amber-600" : "text-emerald-600"
+                        }`}
+                      >
+                        {occupiedBedsCount} of {room.capacity} Beds
+                      </span>
+                    </div>
+                  </div>
 
-                        <div className="pt-2 border-t border-border flex justify-between items-center text-micro font-mono">
-                          <span className="text-ink-muted">Status:</span>
-                          <span
-                            className={`font-medium ${
-                              isFull
-                                ? "text-status-occupied"
-                                : isPartial
-                                ? "text-status-partial"
-                                : "text-status-vacant"
+                  {/* Bed Slots Grid (Optimistic UI Pattern #1) */}
+                  <div className="mt-4 space-y-2">
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block">
+                      Bed Slots:
+                    </span>
+                    <div className="grid grid-cols-1 gap-2">
+                      {room.beds.map((bed) => {
+                        const isOccupied = bed.status === "OCCUPIED";
+                        return (
+                          <div
+                            key={bed.id}
+                            className={`p-2.5 rounded-lg border text-xs flex items-center justify-between transition-all ${
+                              isOccupied
+                                ? "bg-slate-50 border-slate-200 text-slate-700"
+                                : "bg-emerald-50/50 border-emerald-200 text-emerald-900"
                             }`}
                           >
-                            {isFull
-                              ? "Fully Occupied"
-                              : isPartial
-                              ? "Partially Occupied"
-                              : "Vacant"}
-                          </span>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
+                            <div className="flex items-center gap-2">
+                              <span
+                                className={`w-2 h-2 rounded-full ${
+                                  isOccupied ? "bg-slate-400" : "bg-emerald-600"
+                                }`}
+                              />
+                              <span className="font-bold">{bed.bedLabel}</span>
+                              {isOccupied && bed.studentName ? (
+                                <span className="text-[11px] text-slate-600 truncate max-w-28">
+                                  • {bed.studentName}
+                                </span>
+                              ) : (
+                                <span className="text-[11px] text-emerald-700 font-semibold">
+                                  Vacant
+                                </span>
+                              )}
+                            </div>
 
-      {/* Add Floor Modal */}
-      {showAddFloorModal && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-canvas-surface border border-border w-full max-w-md p-6 space-y-4 shadow-xl">
-            <div className="flex items-center justify-between pb-3 border-b border-border">
-              <h3 className="font-serif text-subhead text-ink font-medium">
-                Register New Architectural Tier (Floor)
+                            {/* Optimistic Allocation/Vacate Buttons */}
+                            {isOccupied ? (
+                              <button
+                                type="button"
+                                onClick={() => handleVacateBed(bed)}
+                                className="text-[10px] font-semibold text-slate-500 hover:text-red-600 underline"
+                              >
+                                Vacate
+                              </button>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={() => setSelectedBedForAllocation(bed)}
+                                className="px-2 py-0.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-[10px] font-semibold shadow-2xs"
+                              >
+                                Assign Bed
+                              </button>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Bed Assignment Modal (UX Pattern #1) */}
+      {selectedBedForAllocation && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs">
+          <div className="w-full max-w-md bg-white border border-slate-200 rounded-2xl p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <h3 className="text-base font-bold text-slate-900">
+                Assign {selectedBedForAllocation.bedLabel} to Resident
               </h3>
               <button
-                onClick={() => setShowAddFloorModal(false)}
-                className="text-ink-muted hover:text-ink"
+                onClick={() => setSelectedBedForAllocation(null)}
+                className="p-1 text-slate-400 hover:text-slate-600"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <form onSubmit={handleCreateFloor} className="space-y-4">
-              <div>
-                <label className="block text-caption font-medium text-ink mb-1">
-                  Floor Name (English) *
-                </label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. Fourth Tier (Executive Suite)"
-                  value={newFloorName}
-                  onChange={(e) => setNewFloorName(e.target.value)}
-                  className="w-full border border-border px-3 py-2 text-body bg-canvas focus:outline-hidden focus:border-brass"
-                />
-              </div>
+            <div className="space-y-3">
+              <label className="block text-xs font-semibold text-slate-700">
+                Select Active Resident:
+              </label>
+              <select
+                value={selectedStudentForBed}
+                onChange={(e) => setSelectedStudentForBed(e.target.value)}
+                className="w-full text-xs font-semibold px-3 py-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-600"
+              >
+                <option value="">-- Choose Resident --</option>
+                {students
+                  .filter((s) => s.status === "ACTIVE")
+                  .map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.name} ({s.cnic})
+                    </option>
+                  ))}
+              </select>
+            </div>
 
-              <div>
-                <label className="block text-caption font-medium text-ink mb-1">
-                  Floor Name (Urdu)
-                </label>
-                <input
-                  type="text"
-                  placeholder="e.g. چوتھی منزل (ایگزیکٹو سویٹ)"
-                  value={newFloorNameUrdu}
-                  onChange={(e) => setNewFloorNameUrdu(e.target.value)}
-                  dir="rtl"
-                  className="w-full border border-border px-3 py-2 text-body bg-canvas focus:outline-hidden focus:border-brass"
-                />
-              </div>
-
-              <div className="flex justify-end gap-2 pt-2 border-t border-border">
-                <button
-                  type="button"
-                  onClick={() => setShowAddFloorModal(false)}
-                  className="px-4 py-2 border border-border text-caption text-ink-muted hover:text-ink"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-brass text-white text-caption font-medium hover:bg-brass-hover transition-colors"
-                >
-                  Save Floor
-                </button>
-              </div>
-            </form>
+            <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => setSelectedBedForAllocation(null)}
+                className="px-4 py-2 text-xs font-semibold text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={!selectedStudentForBed}
+                onClick={handleConfirmBedAllocation}
+                className="px-4 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg shadow-xs"
+              >
+                Assign Instantly
+              </button>
+            </div>
           </div>
         </div>
       )}
 
-      {/* Add Room Modal */}
+      {/* Add Chamber Modal */}
       {showAddRoomModal && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-canvas-surface border border-border w-full max-w-md p-6 space-y-4 shadow-xl">
-            <div className="flex items-center justify-between pb-3 border-b border-border">
-              <h3 className="font-serif text-subhead text-ink font-medium">
-                Register New Suite Chamber
-              </h3>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs">
+          <div className="w-full max-w-md bg-white border border-slate-200 rounded-2xl p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <h3 className="text-base font-bold text-slate-900">Add New Chamber</h3>
               <button
                 onClick={() => setShowAddRoomModal(false)}
-                className="text-ink-muted hover:text-ink"
+                className="p-1 text-slate-400 hover:text-slate-600"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <form onSubmit={handleCreateRoom} className="space-y-4">
+            <form onSubmit={handleAddRoom} className="space-y-4 text-xs">
               <div>
-                <label className="block text-caption font-medium text-ink mb-1">
-                  Architectural Tier (Floor) *
-                </label>
+                <label className="block font-semibold text-slate-700 mb-1">Building Floor</label>
                 <select
-                  value={targetFloorId}
-                  onChange={(e) => setTargetFloorId(e.target.value)}
-                  className="w-full border border-border px-3 py-2 text-body bg-canvas focus:outline-hidden focus:border-brass"
+                  value={newRoom.floorId}
+                  onChange={(e) => setNewRoom({ ...newRoom, floorId: e.target.value })}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
                 >
                   {floors.map((f) => (
                     <option key={f.id} value={f.id}>
@@ -404,85 +460,75 @@ export default function InventoryPage() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-caption font-medium text-ink mb-1">
-                    Chamber Number *
-                  </label>
+                  <label className="block font-semibold text-slate-700 mb-1">Room Number *</label>
                   <input
                     type="text"
                     required
-                    placeholder="e.g. 105"
-                    value={roomNumber}
-                    onChange={(e) => setRoomNumber(e.target.value)}
-                    className="w-full border border-border px-3 py-2 text-body bg-canvas focus:outline-hidden focus:border-brass"
+                    value={newRoom.roomNumber}
+                    onChange={(e) => setNewRoom({ ...newRoom, roomNumber: e.target.value })}
+                    placeholder="e.g. 204"
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
                   />
                 </div>
-
                 <div>
-                  <label className="block text-caption font-medium text-ink mb-1">
-                    Layout Type *
-                  </label>
+                  <label className="block font-semibold text-slate-700 mb-1">Room Type</label>
                   <select
-                    value={roomType}
+                    value={newRoom.type}
                     onChange={(e) => {
-                      const val = e.target.value as any;
-                      setRoomType(val);
-                      if (val === "SINGLE") setCapacity(1);
-                      if (val === "DOUBLE") setCapacity(2);
-                      if (val === "TRIPLE") setCapacity(3);
-                      if (val === "DORMITORY") setCapacity(4);
+                      const type = e.target.value as any;
+                      const cap = type === "SINGLE" ? 1 : type === "DOUBLE" ? 2 : type === "TRIPLE" ? 3 : 4;
+                      setNewRoom({ ...newRoom, type, capacity: cap });
                     }}
-                    className="w-full border border-border px-3 py-2 text-body bg-canvas focus:outline-hidden focus:border-brass"
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
                   >
-                    <option value="SINGLE">Single Executive</option>
-                    <option value="DOUBLE">Double Scholars</option>
-                    <option value="TRIPLE">Triple Residency</option>
-                    <option value="DORMITORY">Fellowship Dormitory</option>
+                    <option value="SINGLE">Single</option>
+                    <option value="DOUBLE">Double</option>
+                    <option value="TRIPLE">Triple</option>
+                    <option value="DORMITORY">Dormitory</option>
                   </select>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-caption font-medium text-ink mb-1">
-                    Bed Capacity
-                  </label>
+                  <label className="block font-semibold text-slate-700 mb-1">Monthly Rent (PKR)</label>
                   <input
                     type="number"
-                    min={1}
-                    max={6}
-                    value={capacity}
-                    onChange={(e) => setCapacity(Number(e.target.value))}
-                    className="w-full border border-border px-3 py-2 text-body bg-canvas focus:outline-hidden focus:border-brass"
+                    value={newRoom.monthlyRate}
+                    onChange={(e) => setNewRoom({ ...newRoom, monthlyRate: Number(e.target.value) })}
+                    className="w-full font-mono px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 tabular-nums"
                   />
                 </div>
-
                 <div>
-                  <label className="block text-caption font-medium text-ink mb-1">
-                    Monthly Tariff (Rs.) *
-                  </label>
-                  <input
-                    type="number"
-                    required
-                    value={monthlyRate}
-                    onChange={(e) => setMonthlyRate(Number(e.target.value))}
-                    className="w-full border border-border px-3 py-2 text-body bg-canvas focus:outline-hidden focus:border-brass"
-                  />
+                  <label className="block font-semibold text-slate-700 mb-1">Climate</label>
+                  <div className="flex items-center gap-2 mt-2">
+                    <input
+                      type="checkbox"
+                      id="ac-check"
+                      checked={newRoom.isAc}
+                      onChange={(e) => setNewRoom({ ...newRoom, isAc: e.target.checked })}
+                      className="w-4 h-4 rounded text-blue-600"
+                    />
+                    <label htmlFor="ac-check" className="text-slate-700 font-medium">
+                      Inverter AC
+                    </label>
+                  </div>
                 </div>
               </div>
 
-              <div className="flex justify-end gap-2 pt-2 border-t border-border">
+              <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-100">
                 <button
                   type="button"
                   onClick={() => setShowAddRoomModal(false)}
-                  className="px-4 py-2 border border-border text-caption text-ink-muted hover:text-ink"
+                  className="px-4 py-2 font-semibold text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-brass text-white text-caption font-medium hover:bg-brass-hover transition-colors"
+                  className="px-4 py-2 font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-xs"
                 >
-                  Commit Chamber
+                  Save Chamber
                 </button>
               </div>
             </form>
@@ -490,62 +536,90 @@ export default function InventoryPage() {
         </div>
       )}
 
-      {/* Bed Allocation Modal */}
-      {allocatingBedId && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-canvas-surface border border-border w-full max-w-md p-6 space-y-4 shadow-xl">
-            <div className="flex items-center justify-between pb-3 border-b border-border">
-              <h3 className="font-serif text-subhead text-ink font-medium">
-                {t.btnConfirmBedAllocation}
-              </h3>
+      {/* Add Floor Modal */}
+      {showAddFloorModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs">
+          <div className="w-full max-w-sm bg-white border border-slate-200 rounded-2xl p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <h3 className="text-base font-bold text-slate-900">Add Building Floor</h3>
               <button
-                onClick={() => setAllocatingBedId(null)}
-                className="text-ink-muted hover:text-ink"
+                onClick={() => setShowAddFloorModal(false)}
+                className="p-1 text-slate-400 hover:text-slate-600"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <div className="space-y-4">
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (!newFloorName) return;
+                addFloor(newFloorName, newFloorNameUrdu || newFloorName);
+                setShowAddFloorModal(false);
+                setNewFloorName("");
+                setNewFloorNameUrdu("");
+                showToast(`Floor "${newFloorName}" added.`, "success");
+              }}
+              className="space-y-3 text-xs"
+            >
               <div>
-                <label className="block text-caption font-medium text-ink mb-1.5">
-                  Select Enrolled Resident to Allocate:
-                </label>
-                <select
-                  value={selectedStudentId}
-                  onChange={(e) => setSelectedStudentId(e.target.value)}
-                  className="w-full border border-border px-3 py-2 text-body bg-canvas focus:outline-hidden focus:border-brass"
-                >
-                  {students.map((std) => (
-                    <option key={std.id} value={std.id}>
-                      {std.name} — {std.institution.split(" - ")[0]} (Current: #{std.roomNumber})
-                    </option>
-                  ))}
-                </select>
+                <label className="block font-semibold text-slate-700 mb-1">Floor Name (English)</label>
+                <input
+                  type="text"
+                  required
+                  value={newFloorName}
+                  onChange={(e) => setNewFloorName(e.target.value)}
+                  placeholder="e.g. Third Floor (Scholars Attic)"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                />
               </div>
 
-              <div className="p-3 bg-canvas-subtle border border-border text-caption text-ink-muted">
-                Assigning this bed slot will immediately update the cadastral occupancy records and link monthly fee challans to this chamber.
+              <div>
+                <label className="block font-semibold text-slate-700 mb-1">Floor Name (Urdu)</label>
+                <input
+                  type="text"
+                  value={newFloorNameUrdu}
+                  onChange={(e) => setNewFloorNameUrdu(e.target.value)}
+                  placeholder="e.g. تیسری منزل"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                />
               </div>
 
-              <div className="flex justify-end gap-2 pt-2 border-t border-border">
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
                 <button
-                  onClick={() => setAllocatingBedId(null)}
-                  className="px-4 py-2 border border-border text-caption text-ink-muted hover:text-ink"
+                  type="button"
+                  onClick={() => setShowAddFloorModal(false)}
+                  className="px-4 py-2 font-semibold text-slate-700 bg-white border border-slate-300 rounded-lg"
                 >
                   Cancel
                 </button>
                 <button
-                  onClick={handleConfirmBedAllocation}
-                  className="px-4 py-2 bg-brass text-white text-caption font-medium hover:bg-brass-hover transition-colors"
+                  type="submit"
+                  className="px-4 py-2 font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-xs"
                 >
-                  Confirm Allocation
+                  Add Floor
                 </button>
               </div>
-            </div>
+            </form>
           </div>
         </div>
       )}
+
+      {/* Destructive Delete Room Confirmation Modal (UX Pattern #19) */}
+      <DestructiveConfirmModal
+        isOpen={!!roomToDelete}
+        onClose={() => setRoomToDelete(null)}
+        onConfirm={() => {
+          if (roomToDelete) {
+            deleteRoom(roomToDelete.id);
+            setRoomToDelete(null);
+          }
+        }}
+        title="Delete Chamber from Inventory"
+        description="Are you sure you want to permanently delete this room? Any attached bed records and allocations will be destroyed."
+        itemName={roomToDelete ? `Room ${roomToDelete.roomNumber} (${roomToDelete.type})` : undefined}
+        confirmButtonText="Delete Chamber"
+      />
     </div>
   );
 }

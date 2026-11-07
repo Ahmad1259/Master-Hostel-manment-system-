@@ -1,49 +1,86 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { useApp } from "../../../lib/store";
 import { FeeInvoiceItem } from "../../../lib/mock-data";
 import { formatCurrency, formatDate } from "../../../lib/utils";
-import { BankChallanModal } from "../../../components/bank-challan-modal";
-import { WhatsAppSlipModal } from "../../../components/whatsapp-slip-modal";
+import { DataTable, Column } from "../../../components/ui/data-table";
+import { DestructiveConfirmModal } from "../../../components/ui/destructive-modal";
 import {
   Receipt,
   Search,
   Filter,
-  Printer,
-  MessageSquare,
   CheckCircle2,
   Clock,
   AlertCircle,
   PlusCircle,
   X,
   CreditCard,
-  Download,
+  Printer,
+  Trash2,
+  Check,
+  DollarSign,
+  FileCheck,
 } from "lucide-react";
 
 export default function FeesPage() {
   const {
     feeInvoices,
     recordFeePayment,
+    deletePayment,
     generateMonthlyInvoices,
     students,
-    t,
+    showToast,
   } = useApp();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
-  const [selectedInvoiceForChallan, setSelectedInvoiceForChallan] = useState<FeeInvoiceItem | null>(null);
-  const [selectedInvoiceForWhatsApp, setSelectedInvoiceForWhatsApp] = useState<FeeInvoiceItem | null>(null);
+  const [monthFilter, setMonthFilter] = useState<string>("ALL");
 
   // Record Payment Modal State
   const [paymentTargetInvoice, setPaymentTargetInvoice] = useState<FeeInvoiceItem | null>(null);
   const [paymentAmount, setPaymentAmount] = useState<number>(0);
   const [bankReceiptRef, setBankReceiptRef] = useState<string>("");
 
-  // Month Generation state
-  const [showGenerateModal, setShowGenerateModal] = useState(false);
+  // Printable Receipt View Modal
+  const [receiptTarget, setReceiptTarget] = useState<FeeInvoiceItem | null>(null);
+
+  // Destructive Delete Modal
+  const [invoiceToDelete, setInvoiceToDelete] = useState<FeeInvoiceItem | null>(null);
+
+  // Generate Invoices Modal
+  const [showGenModal, setShowGenModal] = useState(false);
   const [genMonth, setGenMonth] = useState("December");
   const [genYear, setGenYear] = useState(2026);
+
+  // Filter invoices
+  const filteredInvoices = useMemo(() => {
+    return feeInvoices.filter((inv) => {
+      if (searchQuery) {
+        const q = searchQuery.toLowerCase();
+        const matches =
+          inv.studentName.toLowerCase().includes(q) ||
+          inv.roomNumber.toLowerCase().includes(q) ||
+          (inv.bankReceiptRef && inv.bankReceiptRef.toLowerCase().includes(q));
+        if (!matches) return false;
+      }
+
+      if (statusFilter !== "ALL" && inv.status !== statusFilter) {
+        return false;
+      }
+
+      if (monthFilter !== "ALL" && inv.month !== monthFilter) {
+        return false;
+      }
+
+      return true;
+    });
+  }, [feeInvoices, searchQuery, statusFilter, monthFilter]);
+
+  // Overall totals
+  const totalBilled = feeInvoices.reduce((acc, i) => acc + i.totalDue, 0);
+  const totalCollected = feeInvoices.reduce((acc, i) => acc + i.paidAmount, 0);
+  const totalOutstanding = feeInvoices.reduce((acc, i) => acc + i.balanceDues, 0);
 
   const handleOpenPayment = (inv: FeeInvoiceItem) => {
     setPaymentTargetInvoice(inv);
@@ -56,421 +93,541 @@ export default function FeesPage() {
     if (!paymentTargetInvoice || paymentAmount <= 0) return;
     recordFeePayment(paymentTargetInvoice.id, paymentAmount, bankReceiptRef);
     setPaymentTargetInvoice(null);
+    showToast(`Payment of Rs ${paymentAmount.toLocaleString()} recorded.`, "success");
   };
 
-  const handleGenerateInvoices = (e: React.FormEvent) => {
-    e.preventDefault();
-    generateMonthlyInvoices(genMonth, genYear);
-    setShowGenerateModal(false);
-  };
-
-  const filteredInvoices = feeInvoices.filter((inv) => {
-    const q = searchQuery.toLowerCase();
-    const matchesSearch =
-      inv.studentName.toLowerCase().includes(q) ||
-      inv.roomNumber.toLowerCase().includes(q) ||
-      inv.id.toLowerCase().includes(q);
-
-    const matchesStatus = statusFilter === "ALL" || inv.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  });
-
-  const totalBilled = filteredInvoices.reduce((acc, inv) => acc + inv.totalDue, 0);
-  const totalPaid = filteredInvoices.reduce((acc, inv) => acc + inv.paidAmount, 0);
-  const totalArrears = filteredInvoices.reduce((acc, inv) => acc + inv.balanceDues, 0);
-
-  return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-border">
+  // Reusable Table Columns (UX Pattern #11)
+  const columns: Column<FeeInvoiceItem>[] = [
+    {
+      key: "studentName",
+      header: "Resident & Room",
+      sortable: true,
+      render: (inv) => (
         <div>
-          <span className="text-caption font-mono uppercase text-brass tracking-widest">
-            Module 03 • Fiscal Directorate
-          </span>
-          <h1 className="font-serif text-title tracking-tight text-ink mt-0.5">
-            {t.feesTitle}
-          </h1>
-          <p className="text-body text-ink-muted">
-            {t.feesSubtitle}
-          </p>
+          <span className="font-bold text-slate-900 block">{inv.studentName}</span>
+          <span className="text-[11px] text-slate-500 font-mono block">Room {inv.roomNumber}</span>
         </div>
+      ),
+    },
+    {
+      key: "month",
+      header: "Billing Period",
+      sortable: true,
+      render: (inv) => (
+        <span className="font-semibold text-slate-700">
+          {inv.month} {inv.year}
+        </span>
+      ),
+    },
+    {
+      key: "totalDue",
+      header: "Monthly Rent + Dues",
+      sortable: true,
+      render: (inv) => (
+        <span className="font-mono font-bold text-slate-900 tabular-nums">
+          {formatCurrency(inv.totalDue)}
+        </span>
+      ),
+    },
+    {
+      key: "paidAmount",
+      header: "Paid Amount",
+      sortable: true,
+      render: (inv) => (
+        <span className="font-mono font-bold text-emerald-700 tabular-nums">
+          {formatCurrency(inv.paidAmount)}
+        </span>
+      ),
+    },
+    {
+      key: "balanceDues",
+      header: "Pending Arrears",
+      sortable: true,
+      render: (inv) => (
+        <span
+          className={`font-mono font-bold tabular-nums ${
+            inv.balanceDues > 0 ? "text-amber-600" : "text-slate-400"
+          }`}
+        >
+          {formatCurrency(inv.balanceDues)}
+        </span>
+      ),
+    },
+    {
+      key: "bankReceiptRef",
+      header: "Receipt / Bank Ref",
+      render: (inv) => (
+        <span className="font-mono text-[11px] text-slate-600 tabular-nums">
+          {inv.bankReceiptRef || "Pending"}
+        </span>
+      ),
+    },
+    {
+      key: "status",
+      header: "Status",
+      sortable: true,
+      render: (inv) => (
+        <span
+          className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+            inv.status === "PAID"
+              ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+              : inv.status === "PARTIAL"
+              ? "bg-amber-50 text-amber-700 border border-amber-200"
+              : "bg-red-50 text-red-700 border border-red-200"
+          }`}
+        >
+          {inv.status}
+        </span>
+      ),
+    },
+    {
+      key: "actions",
+      header: "Actions",
+      className: "text-right",
+      render: (inv) => (
+        <div className="flex items-center justify-end gap-1.5">
+          {inv.status !== "PAID" && (
+            <button
+              type="button"
+              onClick={() => handleOpenPayment(inv)}
+              className="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-[11px] font-semibold transition-colors shadow-2xs"
+            >
+              Pay
+            </button>
+          )}
 
-        <div className="flex items-center gap-3">
           <button
-            onClick={() => setShowGenerateModal(true)}
-            className="inline-flex items-center gap-2 bg-brass hover:bg-brass-hover text-white px-4 py-2 text-caption font-medium uppercase tracking-wider transition-colors shadow-xs"
+            type="button"
+            onClick={() => setReceiptTarget(inv)}
+            className="p-1 rounded text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+            title="Print Official Challan Receipt"
           >
-            <PlusCircle className="w-3.5 h-3.5" />
-            <span>Generate Monthly Billing Cycle</span>
+            <Printer className="w-3.5 h-3.5" />
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setInvoiceToDelete(inv)}
+            className="p-1 rounded text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+            title="Delete Invoice"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
           </button>
         </div>
+      ),
+    },
+  ];
+
+  return (
+    <div className="space-y-6 animate-in fade-in duration-150">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-200">
+        <div>
+          <span className="text-xs font-semibold text-blue-600 uppercase tracking-wide">
+            Financial Ledger &amp; Billing
+          </span>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 mt-1">
+            Rent Invoices &amp; Payment History
+          </h1>
+          <p className="text-sm text-slate-600 mt-0.5">
+            Automated monthly fee generation, bank reconciliation, and arrears tracking.
+          </p>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => setShowGenModal(true)}
+          className="inline-flex items-center gap-1.5 px-4 py-2.5 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-xs transition-colors self-start sm:self-auto"
+        >
+          <Receipt className="w-4 h-4" />
+          <span>Generate Monthly Invoices</span>
+        </button>
       </div>
 
-      {/* Summary KPI Strip */}
+      {/* 3 Top Financial KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="border border-border bg-canvas-surface p-4 space-y-1">
-          <span className="text-caption text-ink-muted">Gross Receivables:</span>
-          <p className="text-2xl font-serif text-ink tracking-tight font-medium font-tabular">
+        <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs">
+          <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide block">
+            Total Invoiced
+          </span>
+          <p className="text-2xl sm:text-3xl font-bold text-slate-900 mt-1 tabular-nums">
             {formatCurrency(totalBilled)}
           </p>
-          <p className="text-micro font-mono text-ink-muted">
-            {filteredInvoices.length} Registered Challans
-          </p>
+          <p className="text-[11px] text-slate-500 mt-1">Cumulative student rent charges</p>
         </div>
 
-        <div className="border border-border bg-canvas-surface p-4 space-y-1">
-          <span className="text-caption text-ink-muted">Realized Collections:</span>
-          <p className="text-2xl font-serif text-status-occupied tracking-tight font-medium font-tabular">
-            {formatCurrency(totalPaid)}
+        <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs">
+          <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide block">
+            Collected In Bank / Cash
+          </span>
+          <p className="text-2xl sm:text-3xl font-bold text-emerald-600 mt-1 tabular-nums">
+            {formatCurrency(totalCollected)}
           </p>
-          <p className="text-micro font-mono text-status-occupied">
-            Settled via Meezan Bank IBFT / Cash
-          </p>
+          <p className="text-[11px] text-slate-500 mt-1">Reconciled payments</p>
         </div>
 
-        <div className="border border-border bg-canvas-surface p-4 space-y-1">
-          <span className="text-caption text-ink-muted">Cumulative Arrears:</span>
-          <p className="text-2xl font-serif text-status-unpaid tracking-tight font-medium font-tabular">
-            {formatCurrency(totalArrears)}
+        <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs">
+          <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide block">
+            Pending Dues
+          </span>
+          <p className="text-2xl sm:text-3xl font-bold text-amber-600 mt-1 tabular-nums">
+            {formatCurrency(totalOutstanding)}
           </p>
-          <p className="text-micro font-mono text-status-unpaid">
-            Rolled Over Unpaid Balances
+          <p className="text-[11px] text-slate-500 mt-1">
+            {feeInvoices.filter((i) => i.balanceDues > 0).length} overdue invoices
           </p>
         </div>
       </div>
 
-      {/* Filter and Search Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border border-border bg-canvas-surface p-4">
-        <div className="relative flex-1 max-w-md">
-          <Search className="w-4 h-4 text-ink-muted absolute left-3 top-1/2 -translate-y-1/2 stroke-[1.25]" />
+      {/* Filter and Search Bar (UX Pattern #12) */}
+      <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-xs flex flex-col md:flex-row gap-3 items-center justify-between">
+        <div className="relative w-full md:w-80">
+          <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
           <input
             type="text"
-            placeholder="Search by invoice reference, resident name, or room..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full border border-border pl-9 pr-3 py-1.5 text-body bg-canvas focus:outline-hidden focus:border-brass text-ink"
+            placeholder="Search by student name, room, receipt ref..."
+            className="w-full text-xs font-medium pl-10 pr-4 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-600"
           />
         </div>
 
-        <div className="flex items-center gap-2">
-          <span className="text-caption text-ink-muted">Status:</span>
+        <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
+          {/* Status filter */}
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="border border-border bg-canvas px-3 py-1.5 text-caption text-ink"
+            className="text-xs font-semibold bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-slate-800 focus:outline-none"
           >
-            <option value="ALL">All Settlement Statuses</option>
-            <option value="PAID">Cleared / Settled</option>
-            <option value="PARTIAL">Partial Remittance</option>
-            <option value="UNPAID">Arrears Outstanding</option>
+            <option value="ALL">All Payment Statuses</option>
+            <option value="PAID">Paid in Full</option>
+            <option value="PARTIAL">Partially Paid</option>
+            <option value="UNPAID">Unpaid Dues</option>
+          </select>
+
+          {/* Month filter */}
+          <select
+            value={monthFilter}
+            onChange={(e) => setMonthFilter(e.target.value)}
+            className="text-xs font-semibold bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-slate-800 focus:outline-none"
+          >
+            <option value="ALL">All Billing Months</option>
+            <option value="November">November 2026</option>
+            <option value="October">October 2026</option>
+            <option value="December">December 2026</option>
           </select>
         </div>
       </div>
 
-      {/* Fees Invoices Table */}
-      <div className="border border-border bg-canvas-surface overflow-x-auto">
-        <table className="w-full text-left text-body border-collapse">
-          <thead>
-            <tr className="border-b border-border bg-canvas-subtle text-micro font-mono text-ink-muted uppercase">
-              <th className="p-3 font-semibold">Challan Ref &amp; Cycle</th>
-              <th className="p-3 font-semibold">Resident Particulars</th>
-              <th className="p-3 font-semibold">Tariff Breakdown</th>
-              <th className="p-3 font-semibold">Net Payable</th>
-              <th className="p-3 font-semibold">Realized</th>
-              <th className="p-3 font-semibold">Status &amp; Dues</th>
-              <th className="p-3 font-semibold text-right">Dispatch &amp; Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-border">
-            {filteredInvoices.length === 0 ? (
-              <tr>
-                <td colSpan={7} className="p-8 text-center text-caption text-ink-muted">
-                  No invoices found matching current criteria.
-                </td>
-              </tr>
-            ) : (
-              filteredInvoices.map((inv) => (
-                <tr key={inv.id} className="hover:bg-canvas-subtle/50 transition-colors">
-                  <td className="p-3 font-mono">
-                    <span className="text-caption font-bold text-ink block">
-                      {inv.id}
-                    </span>
-                    <span className="text-micro text-ink-muted">
-                      {inv.month} {inv.year}
-                    </span>
-                    <span className="text-micro text-zinc-400 block mt-0.5">
-                      Due: {formatDate(inv.dueDate)}
-                    </span>
-                  </td>
+      {/* Reusable Data Table with EMPTY STATE: "No dues pending" (UX Pattern #5 & #11) */}
+      <DataTable
+        data={filteredInvoices}
+        columns={columns}
+        keyExtractor={(i) => i.id}
+        emptyTitle={
+          statusFilter === "UNPAID" ? "No dues pending" : "No invoices found"
+        }
+        emptySubtitle={
+          statusFilter === "UNPAID"
+            ? "All residents have cleared their invoices for this period."
+            : "No records matching your search or filters."
+        }
+        defaultPageSize={10}
+      />
 
-                  <td className="p-3">
-                    <p className="font-serif text-subhead font-medium text-ink leading-tight">
-                      {inv.studentName}
-                    </p>
-                    <p className="text-micro text-ink-muted font-mono">
-                      Chamber: Suite #{inv.roomNumber}
-                    </p>
-                    {inv.bankReceiptRef && (
-                      <span className="text-micro font-mono text-brass mt-0.5 block truncate max-w-36">
-                        Ref: {inv.bankReceiptRef}
-                      </span>
-                    )}
-                  </td>
-
-                  <td className="p-3 font-mono text-micro space-y-0.5">
-                    <div className="text-zinc-600">Base: {formatCurrency(inv.amount)}</div>
-                    {inv.arrears > 0 && (
-                      <div className="text-red-700">Arrears B/F: +{formatCurrency(inv.arrears)}</div>
-                    )}
-                    {inv.discount > 0 && (
-                      <div className="text-emerald-700">
-                        Waiver: -{formatCurrency(inv.discount)}
-                        {inv.discountReason && (
-                          <span className="block text-micro text-zinc-400 font-sans italic">
-                            ({inv.discountReason})
-                          </span>
-                        )}
-                      </div>
-                    )}
-                  </td>
-
-                  <td className="p-3 font-mono font-medium text-caption text-ink">
-                    {formatCurrency(inv.totalDue)}
-                  </td>
-
-                  <td className="p-3 font-mono text-caption text-status-occupied font-medium">
-                    {formatCurrency(inv.paidAmount)}
-                  </td>
-
-                  <td className="p-3">
-                    <span
-                      className={`inline-block text-micro font-mono uppercase px-2 py-0.5 border ${
-                        inv.status === "PAID"
-                          ? "bg-emerald-50 text-emerald-800 border-emerald-300"
-                          : inv.status === "PARTIAL"
-                          ? "bg-amber-50 text-amber-800 border-amber-300"
-                          : "bg-red-50 text-red-800 border-red-300"
-                      }`}
-                    >
-                      {inv.status === "PAID"
-                        ? "Cleared"
-                        : inv.status === "PARTIAL"
-                        ? "Partial"
-                        : "Arrears Due"}
-                    </span>
-                    {inv.balanceDues > 0 && (
-                      <p className="text-micro font-mono text-status-unpaid font-medium mt-1">
-                        Dues: {formatCurrency(inv.balanceDues)}
-                      </p>
-                    )}
-                  </td>
-
-                  <td className="p-3 text-right space-x-1.5 whitespace-nowrap">
-                    {/* Record Payment */}
-                    {inv.status !== "PAID" && (
-                      <button
-                        onClick={() => handleOpenPayment(inv)}
-                        className="inline-flex items-center gap-1 text-micro font-mono border border-border bg-ink text-canvas hover:bg-brass px-2 py-1 transition-colors"
-                        title="Record Remittance"
-                      >
-                        <CreditCard className="w-3 h-3" />
-                        <span>Pay</span>
-                      </button>
-                    )}
-
-                    {/* View/Print Bank Challan */}
-                    <button
-                      onClick={() => setSelectedInvoiceForChallan(inv)}
-                      className="inline-flex items-center gap-1 text-micro font-mono border border-border bg-canvas-surface hover:bg-canvas-subtle text-ink px-2 py-1 transition-colors"
-                      title="View Official 3-Part Bank Challan"
-                    >
-                      <Printer className="w-3 h-3 text-brass" />
-                      <span>Challan</span>
-                    </button>
-
-                    {/* WhatsApp Slip */}
-                    <button
-                      onClick={() => {
-                        const std = students.find((s) => s.id === inv.studentId);
-                        setSelectedInvoiceForWhatsApp(inv);
-                      }}
-                      className="inline-flex items-center gap-1 text-micro font-mono border border-emerald-300 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 px-2 py-1 transition-colors"
-                      title="Dispatch WhatsApp Slip"
-                    >
-                      <MessageSquare className="w-3 h-3 text-emerald-700" />
-                      <span>WhatsApp</span>
-                    </button>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Record Payment Modal */}
+      {/* Record Fee Payment Modal */}
       {paymentTargetInvoice && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-canvas-surface border border-border w-full max-w-md p-6 space-y-4 shadow-xl">
-            <div className="flex items-center justify-between pb-3 border-b border-border">
-              <h3 className="font-serif text-subhead text-ink font-medium">
-                Record Fee Remittance
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs">
+          <div className="w-full max-w-md bg-white border border-slate-200 rounded-2xl p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <h3 className="text-base font-bold text-slate-900">
+                Record Payment for {paymentTargetInvoice.studentName}
               </h3>
               <button
                 onClick={() => setPaymentTargetInvoice(null)}
-                className="text-ink-muted hover:text-ink"
+                className="p-1 text-slate-400 hover:text-slate-600"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <form onSubmit={handleConfirmPayment} className="space-y-4">
-              <div className="p-3 bg-canvas-subtle border border-border text-caption space-y-1">
-                <p className="font-medium text-ink">
-                  Resident: {paymentTargetInvoice.studentName} (Suite #{paymentTargetInvoice.roomNumber})
-                </p>
-                <p className="text-ink-muted">
-                  Invoice Ref: {paymentTargetInvoice.id} | Balance Due: {formatCurrency(paymentTargetInvoice.balanceDues > 0 ? paymentTargetInvoice.balanceDues : paymentTargetInvoice.totalDue)}
-                </p>
+            <form onSubmit={handleConfirmPayment} className="space-y-4 text-xs">
+              <div className="bg-slate-50 p-3.5 rounded-lg space-y-1.5 border border-slate-200">
+                <div className="flex justify-between">
+                  <span className="text-slate-600">Room:</span>
+                  <span className="font-bold text-slate-900">Room {paymentTargetInvoice.roomNumber}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-600">Period:</span>
+                  <span className="font-bold text-slate-900">
+                    {paymentTargetInvoice.month} {paymentTargetInvoice.year}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-600">Total Billed:</span>
+                  <span className="font-mono font-bold text-slate-900 tabular-nums">
+                    {formatCurrency(paymentTargetInvoice.totalDue)}
+                  </span>
+                </div>
+                <div className="flex justify-between border-t border-slate-200 pt-1.5">
+                  <span className="text-slate-600">Remaining Balance:</span>
+                  <span className="font-mono font-bold text-amber-600 tabular-nums">
+                    {formatCurrency(paymentTargetInvoice.balanceDues)}
+                  </span>
+                </div>
               </div>
 
               <div>
-                <label className="block text-caption font-medium text-ink mb-1">
-                  Amount Realized (Rs.) *
+                <label className="block font-semibold text-slate-700 mb-1">
+                  Payment Amount Received (PKR) *
                 </label>
                 <input
                   type="number"
                   required
-                  min={1}
-                  max={paymentTargetInvoice.totalDue}
                   value={paymentAmount}
                   onChange={(e) => setPaymentAmount(Number(e.target.value))}
-                  className="w-full border border-border px-3 py-2 text-body bg-canvas focus:outline-hidden focus:border-brass font-mono"
+                  className="w-full font-mono text-sm px-3.5 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 tabular-nums font-bold text-slate-900"
                 />
-                <span className="text-micro text-ink-muted font-mono mt-0.5 block">
-                  Partial payments will leave remaining balance as rolling arrears.
-                </span>
               </div>
 
               <div>
-                <label className="block text-caption font-medium text-ink mb-1">
-                  Bank Transaction Ref / Deposit Slip Voucher
+                <label className="block font-semibold text-slate-700 mb-1">
+                  Bank Transaction Ref / Cash Voucher # *
                 </label>
                 <input
                   type="text"
                   required
                   value={bankReceiptRef}
                   onChange={(e) => setBankReceiptRef(e.target.value)}
-                  className="w-full border border-border px-3 py-2 text-body bg-canvas focus:outline-hidden focus:border-brass font-mono"
+                  placeholder="e.g. MEZN-7281920 or CASH-001"
+                  className="w-full font-mono text-xs px-3.5 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
                 />
               </div>
 
-              <div className="flex justify-end gap-2 pt-2 border-t border-border">
+              <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-100">
                 <button
                   type="button"
                   onClick={() => setPaymentTargetInvoice(null)}
-                  className="px-4 py-2 border border-border text-caption text-ink-muted hover:text-ink"
+                  className="px-4 py-2 font-semibold text-slate-700 bg-white border border-slate-300 rounded-lg"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-brass text-white text-caption font-medium hover:bg-brass-hover transition-colors"
+                  className="px-4 py-2 font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-xs"
                 >
-                  Commit Payment Record
+                  Record Payment &amp; Issue Receipt
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Printable Receipt Preview Modal */}
+      {receiptTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs">
+          <div className="w-full max-w-lg bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 shadow-2xl space-y-6 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-start justify-between border-b border-slate-100 pb-4">
+              <div>
+                <div className="flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-lg bg-blue-600 text-white flex items-center justify-center font-bold text-xs">
+                    GP
+                  </div>
+                  <h3 className="text-base font-bold text-slate-900">
+                    Official Fee Challan Receipt
+                  </h3>
+                </div>
+                <p className="text-xs text-slate-500 mt-1">
+                  The Grand Pavilion &amp; Scholars Residency, Lahore
+                </p>
+              </div>
+              <button
+                onClick={() => setReceiptTarget(null)}
+                className="p-1 text-slate-400 hover:text-slate-600"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Receipt Body */}
+            <div className="space-y-4 text-xs">
+              <div className="grid grid-cols-2 gap-3 p-3.5 bg-slate-50 rounded-lg border border-slate-200">
+                <div>
+                  <span className="text-slate-400 block text-[10px] uppercase font-semibold">
+                    Resident Name
+                  </span>
+                  <span className="font-bold text-slate-900 text-sm block">
+                    {receiptTarget.studentName}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-slate-400 block text-[10px] uppercase font-semibold">
+                    Assigned Chamber
+                  </span>
+                  <span className="font-bold text-slate-900 text-sm block">
+                    Room {receiptTarget.roomNumber}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-slate-400 block text-[10px] uppercase font-semibold">
+                    Billing Period
+                  </span>
+                  <span className="font-bold text-slate-900 block">
+                    {receiptTarget.month} {receiptTarget.year}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-slate-400 block text-[10px] uppercase font-semibold">
+                    Receipt Reference
+                  </span>
+                  <span className="font-mono font-bold text-slate-900 block">
+                    {receiptTarget.bankReceiptRef || "CASH-PAID"}
+                  </span>
+                </div>
+              </div>
+
+              <div className="border border-slate-200 rounded-lg divide-y divide-slate-100">
+                <div className="p-3 flex justify-between">
+                  <span className="text-slate-600">Monthly Room Rent:</span>
+                  <span className="font-mono font-bold text-slate-900 tabular-nums">
+                    {formatCurrency(receiptTarget.amount)}
+                  </span>
+                </div>
+                {receiptTarget.arrears > 0 && (
+                  <div className="p-3 flex justify-between">
+                    <span className="text-slate-600">Previous Arrears:</span>
+                    <span className="font-mono font-bold text-amber-600 tabular-nums">
+                      {formatCurrency(receiptTarget.arrears)}
+                    </span>
+                  </div>
+                )}
+                <div className="p-3 flex justify-between bg-slate-50/50">
+                  <span className="font-bold text-slate-900">Total Invoiced:</span>
+                  <span className="font-mono font-bold text-slate-900 tabular-nums">
+                    {formatCurrency(receiptTarget.totalDue)}
+                  </span>
+                </div>
+                <div className="p-3 flex justify-between bg-emerald-50/30">
+                  <span className="font-bold text-emerald-800">Amount Received:</span>
+                  <span className="font-mono font-bold text-emerald-700 tabular-nums">
+                    {formatCurrency(receiptTarget.paidAmount)}
+                  </span>
+                </div>
+                <div className="p-3 flex justify-between">
+                  <span className="text-slate-600">Outstanding Balance:</span>
+                  <span className="font-mono font-bold text-slate-800 tabular-nums">
+                    {formatCurrency(receiptTarget.balanceDues)}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between pt-4 border-t border-slate-100">
+              <span className="text-[11px] text-slate-400">
+                Issued by Warden Office • Lahore
+              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  window.print();
+                }}
+                className="inline-flex items-center gap-1.5 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-semibold shadow-xs"
+              >
+                <Printer className="w-3.5 h-3.5" />
+                <span>Print Receipt</span>
+              </button>
+            </div>
           </div>
         </div>
       )}
 
       {/* Generate Monthly Invoices Modal */}
-      {showGenerateModal && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-canvas-surface border border-border w-full max-w-md p-6 space-y-4 shadow-xl">
-            <div className="flex items-center justify-between pb-3 border-b border-border">
-              <h3 className="font-serif text-subhead text-ink font-medium">
-                Initiate Monthly Billing Cycle
+      {showGenModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs">
+          <div className="w-full max-w-sm bg-white border border-slate-200 rounded-2xl p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <h3 className="text-base font-bold text-slate-900">
+                Batch Generate Invoices
               </h3>
               <button
-                onClick={() => setShowGenerateModal(false)}
-                className="text-ink-muted hover:text-ink"
+                onClick={() => setShowGenModal(false)}
+                className="p-1 text-slate-400 hover:text-slate-600"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <form onSubmit={handleGenerateInvoices} className="space-y-4">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-caption font-medium text-ink mb-1">
-                    Billing Month *
-                  </label>
-                  <select
-                    value={genMonth}
-                    onChange={(e) => setGenMonth(e.target.value)}
-                    className="w-full border border-border px-3 py-2 text-body bg-canvas focus:outline-hidden focus:border-brass"
-                  >
-                    <option value="December">December</option>
-                    <option value="January">January</option>
-                    <option value="February">February</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-caption font-medium text-ink mb-1">
-                    Accounting Year *
-                  </label>
-                  <input
-                    type="number"
-                    value={genYear}
-                    onChange={(e) => setGenYear(Number(e.target.value))}
-                    className="w-full border border-border px-3 py-2 text-body bg-canvas focus:outline-hidden focus:border-brass font-mono"
-                  />
-                </div>
-              </div>
-
-              <div className="p-3 bg-canvas-subtle border border-border text-caption text-ink-muted space-y-1">
-                <p className="font-medium text-ink">Statutory Rollover Rules:</p>
-                <ul className="list-disc list-inside space-y-0.5 text-micro">
-                  <li>All active residents receive an automated invoice.</li>
-                  <li>Previous unpaid dues automatically carry forward as arrears.</li>
-                  <li>Challans are generated with Meezan Bank IBAN metadata.</li>
-                </ul>
-              </div>
-
-              <div className="flex justify-end gap-2 pt-2 border-t border-border">
-                <button
-                  type="button"
-                  onClick={() => setShowGenerateModal(false)}
-                  className="px-4 py-2 border border-border text-caption text-ink-muted hover:text-ink"
+            <div className="space-y-3 text-xs">
+              <div>
+                <label className="block font-semibold text-slate-700 mb-1">Billing Month</label>
+                <select
+                  value={genMonth}
+                  onChange={(e) => setGenMonth(e.target.value)}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
                 >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-brass text-white text-caption font-medium hover:bg-brass-hover transition-colors"
-                >
-                  Generate Cycle Challans
-                </button>
+                  <option value="January">January</option>
+                  <option value="February">February</option>
+                  <option value="March">March</option>
+                  <option value="April">April</option>
+                  <option value="November">November</option>
+                  <option value="December">December</option>
+                </select>
               </div>
-            </form>
+
+              <div>
+                <label className="block font-semibold text-slate-700 mb-1">Billing Year</label>
+                <input
+                  type="number"
+                  value={genYear}
+                  onChange={(e) => setGenYear(Number(e.target.value))}
+                  className="w-full font-mono px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 tabular-nums"
+                />
+              </div>
+
+              <div className="p-3 bg-blue-50/70 border border-blue-200 rounded-lg text-[11px] text-blue-900 leading-normal">
+                Generates invoices for all <strong>{students.filter((s) => s.status === "ACTIVE").length} active residents</strong> with their assigned monthly rent plus any carried arrears.
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => setShowGenModal(false)}
+                className="px-4 py-2 font-semibold text-slate-700 bg-white border border-slate-300 rounded-lg"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  generateMonthlyInvoices(genMonth, genYear);
+                  setShowGenModal(false);
+                  showToast(`Invoices generated for ${genMonth} ${genYear}.`, "success");
+                }}
+                className="px-4 py-2 font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-xs"
+              >
+                Generate Invoices
+              </button>
+            </div>
           </div>
         </div>
       )}
 
-      {/* Bank Challan 3-Part Modal */}
-      <BankChallanModal
-        invoice={selectedInvoiceForChallan}
-        onClose={() => setSelectedInvoiceForChallan(null)}
-      />
-
-      {/* WhatsApp Dispatch Modal */}
-      <WhatsAppSlipModal
-        invoice={selectedInvoiceForWhatsApp}
-        student={students.find((s) => s.id === selectedInvoiceForWhatsApp?.studentId)}
-        onClose={() => setSelectedInvoiceForWhatsApp(null)}
+      {/* Destructive Delete Payment Modal (UX Pattern #19) */}
+      <DestructiveConfirmModal
+        isOpen={!!invoiceToDelete}
+        onClose={() => setInvoiceToDelete(null)}
+        onConfirm={() => {
+          if (invoiceToDelete) {
+            deletePayment(invoiceToDelete.id);
+            setInvoiceToDelete(null);
+          }
+        }}
+        title="Delete Invoice from Ledger"
+        description="Are you sure you want to permanently delete this billing invoice? This will remove the transaction record from financial reports."
+        itemName={invoiceToDelete ? `Invoice for ${invoiceToDelete.studentName} (${invoiceToDelete.month} ${invoiceToDelete.year} - Rs ${invoiceToDelete.totalDue})` : undefined}
+        confirmButtonText="Delete Invoice"
       />
     </div>
   );

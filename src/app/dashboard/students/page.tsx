@@ -1,42 +1,66 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useApp } from "../../../lib/store";
 import { StudentItem } from "../../../lib/mock-data";
-import { formatCurrency, formatDate, formatCnic } from "../../../lib/utils";
+import { formatCurrency, formatDate } from "../../../lib/utils";
+import { useDebounce } from "../../../hooks/use-debounce";
+import { DataTable, Column } from "../../../components/ui/data-table";
+import { TableSkeleton } from "../../../components/ui/skeleton-loaders";
+import { DestructiveConfirmModal } from "../../../components/ui/destructive-modal";
 import {
   Users,
   Search,
   Filter,
   Plus,
-  UserCheck,
-  Building,
-  Phone,
-  FileText,
-  ArrowRightLeft,
+  Send,
+  CheckCircle2,
+  Trash2,
+  Edit2,
   X,
+  Phone,
   CreditCard,
-  GraduationCap,
-  Download,
+  Building,
+  Check,
+  AlertCircle,
+  FileSpreadsheet,
 } from "lucide-react";
 
 export default function StudentsPage() {
   const {
     students,
     addStudent,
-    transferStudentRoom,
+    updateStudent,
+    deleteStudent,
+    bulkSendRentReminder,
+    bulkMarkPaid,
     floors,
-    t,
+    showToast,
   } = useApp();
 
-  const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("ALL");
+  // Search & Filtering
+  const [searchInput, setSearchInput] = useState("");
+  const debouncedSearch = useDebounce(searchInput, 300); // UX Pattern #7
   const [floorFilter, setFloorFilter] = useState<string>("ALL");
+  const [statusFilter, setStatusFilter] = useState<string>("ALL");
+  const [messFilter, setMessFilter] = useState<string>("ALL");
 
-  const [showAddStudentModal, setShowAddStudentModal] = useState(false);
-  const [transferTargetStudent, setTransferTargetStudent] = useState<StudentItem | null>(null);
+  // Selection & Bulk Actions (UX Pattern #10)
+  const [selectedStudentIds, setSelectedStudentIds] = useState<string[]>([]);
 
-  // New Student Form State
+  // Skeleton Loading simulation on initial render (UX Pattern #2)
+  const [isLoading, setIsLoading] = useState(true);
+  useEffect(() => {
+    const timer = setTimeout(() => setIsLoading(false), 300);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Modals state
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [editingStudent, setEditingStudent] = useState<StudentItem | null>(null);
+  const [studentToDelete, setStudentToDelete] = useState<StudentItem | null>(null);
+
+  // New Student Form State with Smart Validation (UX Pattern #9)
   const [newStudent, setNewStudent] = useState({
     name: "",
     fatherName: "",
@@ -47,24 +71,66 @@ export default function StudentsPage() {
     admissionDate: new Date().toISOString().split("T")[0],
     status: "ACTIVE" as const,
     floorNumber: 1,
-    roomNumber: "102",
-    bedLabel: "Bed B",
-    roomId: "room-102",
+    roomNumber: "101",
+    bedLabel: "Bed A",
+    roomId: "room-101",
     monthlyRate: 32000,
+    advancePaid: 32000,
+    messStatus: "ON" as const,
+    messBill: 8500,
     pendingArrears: 0,
     propertyId: "prop-gulberg",
   });
 
-  // Transfer Form State
-  const [transferRoomNumber, setTransferRoomNumber] = useState("");
-  const [transferBedLabel, setTransferBedLabel] = useState("Bed A");
-  const [transferRate, setTransferRate] = useState(32000);
+  // Validation rules for inline feedback
+  const isCnicValid = /^\d{5}-\d{7}-\d{1}$/.test(newStudent.cnic);
+  const isPhoneValid = /^(03\d{2}-\d{7}|03\d{9}|\+92\d{10})$/.test(newStudent.phone);
+  const isRentValid = newStudent.monthlyRate >= 5000;
 
-  const handleRegisterStudent = (e: React.FormEvent) => {
+  // Filter students
+  const filteredStudents = useMemo(() => {
+    return students.filter((std) => {
+      // Debounced search
+      if (debouncedSearch) {
+        const query = debouncedSearch.toLowerCase();
+        const matches =
+          std.name.toLowerCase().includes(query) ||
+          std.cnic.includes(query) ||
+          std.roomNumber.toLowerCase().includes(query) ||
+          std.phone.includes(query) ||
+          std.institution.toLowerCase().includes(query);
+        if (!matches) return false;
+      }
+
+      // Floor filter
+      if (floorFilter !== "ALL" && String(std.floorNumber) !== floorFilter) {
+        return false;
+      }
+
+      // Status filter
+      if (statusFilter !== "ALL" && std.status !== statusFilter) {
+        return false;
+      }
+
+      // Mess filter
+      if (messFilter !== "ALL" && (std.messStatus || "ON") !== messFilter) {
+        return false;
+      }
+
+      return true;
+    });
+  }, [students, debouncedSearch, floorFilter, statusFilter, messFilter]);
+
+  // Handle Add Student Submit
+  const handleAddSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newStudent.name || !newStudent.cnic) return;
+    if (!newStudent.name || !isCnicValid || !isPhoneValid || !isRentValid) {
+      showToast("Please fill all required fields correctly.", "warning");
+      return;
+    }
+
     addStudent(newStudent);
-    setShowAddStudentModal(false);
+    setShowAddModal(false);
     setNewStudent({
       name: "",
       fatherName: "",
@@ -75,433 +141,466 @@ export default function StudentsPage() {
       admissionDate: new Date().toISOString().split("T")[0],
       status: "ACTIVE",
       floorNumber: 1,
-      roomNumber: "102",
-      bedLabel: "Bed B",
-      roomId: "room-102",
+      roomNumber: "101",
+      bedLabel: "Bed A",
+      roomId: "room-101",
       monthlyRate: 32000,
+      advancePaid: 32000,
+      messStatus: "ON",
+      messBill: 8500,
       pendingArrears: 0,
       propertyId: "prop-gulberg",
     });
   };
 
-  const handleConfirmTransfer = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!transferTargetStudent || !transferRoomNumber) return;
-    transferStudentRoom(
-      transferTargetStudent.id,
-      transferRoomNumber,
-      transferBedLabel,
-      transferRate
-    );
-    setTransferTargetStudent(null);
+  // Autosave handler for Editing Student (UX Pattern #6)
+  const [saveStatus, setSaveStatus] = useState<string | null>(null);
+  const handleAutosaveField = (field: keyof StudentItem, value: any) => {
+    if (!editingStudent) return;
+    setSaveStatus("Autosaving...");
+    const updated = { ...editingStudent, [field]: value };
+    setEditingStudent(updated);
+
+    // Debounce save toast
+    setTimeout(() => {
+      updateStudent(editingStudent.id, { [field]: value });
+      const timeStr = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+      setSaveStatus(`Changes saved at ${timeStr}`);
+    }, 400);
   };
 
-  // Filter and search computation
-  const filteredStudents = students.filter((std) => {
-    const query = searchQuery.toLowerCase();
-    const matchesSearch =
-      std.name.toLowerCase().includes(query) ||
-      std.cnic.toLowerCase().includes(query) ||
-      std.phone.toLowerCase().includes(query) ||
-      std.roomNumber.toLowerCase().includes(query) ||
-      std.institution.toLowerCase().includes(query);
-
-    const matchesStatus = statusFilter === "ALL" || std.status === statusFilter;
-    const matchesFloor = floorFilter === "ALL" || std.floorNumber.toString() === floorFilter;
-
-    return matchesSearch && matchesStatus && matchesFloor;
-  });
-
-  // Export CSV
-  const handleExportCSV = () => {
-    const headers = [
-      "ID",
-      "Full Name",
-      "Father Name",
-      "CNIC",
-      "Cell Phone",
-      "Guardian Phone",
-      "Institution",
-      "Chamber",
-      "Bed",
-      "Monthly Tariff",
-      "Arrears",
-      "Admission Date",
-      "Status",
-    ];
-    const rows = filteredStudents.map((s) => [
-      s.id,
-      `"${s.name}"`,
-      `"${s.fatherName}"`,
-      s.cnic,
-      s.phone,
-      s.guardianPhone,
-      `"${s.institution}"`,
-      s.roomNumber,
-      s.bedLabel,
-      s.monthlyRate,
-      s.pendingArrears,
-      s.admissionDate,
-      s.status,
-    ]);
-
-    const csvContent =
-      "data:text/csv;charset=utf-8," +
-      [headers.join(","), ...rows.map((e) => e.join(","))].join("\n");
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `Resident_Registry_${new Date().toISOString().split("T")[0]}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
+  // Reusable Table Columns (UX Pattern #11)
+  const columns: Column<StudentItem>[] = [
+    {
+      key: "name",
+      header: "Resident Name",
+      sortable: true,
+      render: (s) => (
+        <div>
+          <span className="font-bold text-slate-900 block">{s.name}</span>
+          <span className="text-[11px] text-slate-500 block">S/O {s.fatherName}</span>
+        </div>
+      ),
+    },
+    {
+      key: "cnic",
+      header: "CNIC",
+      sortable: true,
+      render: (s) => <span className="font-mono text-xs tabular-nums">{s.cnic}</span>,
+    },
+    {
+      key: "phone",
+      header: "Contact",
+      render: (s) => (
+        <span className="font-mono text-xs text-slate-700 tabular-nums">{s.phone}</span>
+      ),
+    },
+    {
+      key: "roomNumber",
+      header: "Chamber & Bed",
+      sortable: true,
+      render: (s) => (
+        <span className="inline-flex items-center gap-1.5 font-semibold text-slate-800">
+          <span className="w-2 h-2 rounded-full bg-blue-600" />
+          <span>Room {s.roomNumber} ({s.bedLabel})</span>
+        </span>
+      ),
+    },
+    {
+      key: "admissionDate",
+      header: "Enrolled",
+      sortable: true,
+      render: (s) => <span className="font-mono text-xs tabular-nums">{s.admissionDate}</span>,
+    },
+    {
+      key: "monthlyRate",
+      header: "Monthly Rent",
+      sortable: true,
+      render: (s) => (
+        <span className="font-mono font-bold text-slate-900 tabular-nums">
+          {formatCurrency(s.monthlyRate)}
+        </span>
+      ),
+    },
+    {
+      key: "status",
+      header: "Status",
+      sortable: true,
+      render: (s) => (
+        <span
+          className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+            s.status === "ACTIVE"
+              ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+              : "bg-slate-100 text-slate-700 border border-slate-200"
+          }`}
+        >
+          {s.status}
+        </span>
+      ),
+    },
+    {
+      key: "actions",
+      header: "Actions",
+      className: "text-right",
+      render: (s) => (
+        <div className="flex items-center justify-end gap-1">
+          <button
+            type="button"
+            onClick={() => setEditingStudent(s)}
+            className="p-1.5 rounded-lg text-slate-500 hover:text-blue-600 hover:bg-slate-100 transition-colors"
+            title="Edit Resident Profile"
+          >
+            <Edit2 className="w-3.5 h-3.5" />
+          </button>
+          <button
+            type="button"
+            onClick={() => setStudentToDelete(s)}
+            className="p-1.5 rounded-lg text-slate-500 hover:text-red-600 hover:bg-red-50 transition-colors"
+            title="Delete Resident"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      ),
+    },
+  ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-in fade-in duration-150">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-border">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-200">
         <div>
-          <span className="text-caption font-mono uppercase text-brass tracking-widest">
-            Module 02 • Resident Directory
+          <span className="text-xs font-semibold text-blue-600 uppercase tracking-wide">
+            Resident Management
           </span>
-          <h1 className="font-serif text-title tracking-tight text-ink mt-0.5">
-            {t.studentsTitle}
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 mt-1">
+            Registered Student Residents
           </h1>
-          <p className="text-body text-ink-muted">
-            {t.studentsSubtitle}
+          <p className="text-sm text-slate-600 mt-0.5">
+            Active resident profiles, room assignments, biometric tenancy records.
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
-          <button
-            onClick={handleExportCSV}
-            className="inline-flex items-center gap-2 border border-border bg-canvas-surface hover:bg-canvas-subtle text-ink px-4 py-2 text-caption font-medium uppercase tracking-wider transition-colors"
-          >
-            <Download className="w-3.5 h-3.5" />
-            <span>Export CSV</span>
-          </button>
-
-          <button
-            onClick={() => setShowAddStudentModal(true)}
-            className="inline-flex items-center gap-2 bg-brass hover:bg-brass-hover text-white px-4 py-2 text-caption font-medium uppercase tracking-wider transition-colors shadow-xs"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            <span>{t.btnAddNewStudent}</span>
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={() => setShowAddModal(true)}
+          className="inline-flex items-center gap-1.5 px-4 py-2.5 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-xs transition-colors self-start sm:self-auto"
+        >
+          <Plus className="w-4 h-4" />
+          <span>Enroll New Resident</span>
+        </button>
       </div>
 
-      {/* Filter and Search Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border border-border bg-canvas-surface p-4">
-        <div className="relative flex-1 max-w-md">
-          <Search className="w-4 h-4 text-ink-muted absolute left-3 top-1/2 -translate-y-1/2 stroke-[1.25]" />
-          <input
-            type="text"
-            placeholder="Search by legal name, CNIC, institution, or room..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full border border-border pl-9 pr-3 py-1.5 text-body bg-canvas focus:outline-hidden focus:border-brass text-ink"
-          />
-        </div>
+      {/* Filter and Search Bar (UX Pattern #7 & #12) */}
+      <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-xs space-y-3">
+        <div className="flex flex-col md:flex-row gap-3">
+          {/* Debounced Search */}
+          <div className="relative flex-1">
+            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              placeholder="Search by student name, CNIC, room number, university..."
+              className="w-full text-xs font-medium pl-10 pr-4 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+            />
+          </div>
 
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2">
-            <span className="text-caption text-ink-muted">Tier:</span>
+          {/* Advanced Dropdown Filters (UX Pattern #12) */}
+          <div className="flex flex-wrap items-center gap-2">
             <select
               value={floorFilter}
               onChange={(e) => setFloorFilter(e.target.value)}
-              className="border border-border bg-canvas px-3 py-1.5 text-caption text-ink"
+              className="text-xs font-semibold bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-slate-800 focus:outline-none"
             >
-              <option value="ALL">All Tiers</option>
+              <option value="ALL">All Floors</option>
               {floors.map((f) => (
-                <option key={f.id} value={f.floorNumber.toString()}>
-                  Floor {f.floorNumber}
+                <option key={f.id} value={f.floorNumber}>
+                  Floor {f.floorNumber} ({f.name})
                 </option>
               ))}
             </select>
-          </div>
 
-          <div className="flex items-center gap-2">
-            <span className="text-caption text-ink-muted">Status:</span>
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="border border-border bg-canvas px-3 py-1.5 text-caption text-ink"
+              className="text-xs font-semibold bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-slate-800 focus:outline-none"
             >
               <option value="ALL">All Statuses</option>
-              <option value="ACTIVE">Active Resident</option>
-              <option value="INACTIVE">De-registered</option>
+              <option value="ACTIVE">Active Residents</option>
+              <option value="INACTIVE">Inactive / Alumni</option>
+            </select>
+
+            <select
+              value={messFilter}
+              onChange={(e) => setMessFilter(e.target.value)}
+              className="text-xs font-semibold bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-slate-800 focus:outline-none"
+            >
+              <option value="ALL">All Mess Tiers</option>
+              <option value="ON">Mess Active (ON)</option>
+              <option value="OFF">Mess Suspended (OFF)</option>
             </select>
           </div>
         </div>
-      </div>
 
-      {/* Students Data Table */}
-      <div className="border border-border bg-canvas-surface overflow-x-auto">
-        <table className="w-full text-left text-body border-collapse">
-          <thead>
-            <tr className="border-b border-border bg-canvas-subtle text-micro font-mono text-ink-muted uppercase">
-              <th className="p-3 font-semibold">Resident Dossier</th>
-              <th className="p-3 font-semibold">CNIC / B-Form</th>
-              <th className="p-3 font-semibold">Contacts</th>
-              <th className="p-3 font-semibold">Chamber / Bed</th>
-              <th className="p-3 font-semibold">Affiliation</th>
-              <th className="p-3 font-semibold">Tariff &amp; Arrears</th>
-              <th className="p-3 font-semibold text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-border">
-            {filteredStudents.length === 0 ? (
-              <tr>
-                <td colSpan={7} className="p-8 text-center text-caption text-ink-muted">
-                  No resident records match your current filter parameters.
-                </td>
-              </tr>
-            ) : (
-              filteredStudents.map((student) => (
-                <tr key={student.id} className="hover:bg-canvas-subtle/50 transition-colors">
-                  <td className="p-3">
-                    <p className="font-serif text-subhead font-medium text-ink leading-tight">
-                      {student.name}
-                    </p>
-                    <p className="text-micro text-ink-muted">
-                      S/O: {student.fatherName}
-                    </p>
-                    <span className="inline-block text-micro font-mono uppercase bg-emerald-100 text-emerald-800 border border-emerald-200 px-1.5 py-0.2 mt-1">
-                      {student.status}
-                    </span>
-                  </td>
+        {/* Bulk Actions Bar (UX Pattern #10) */}
+        {selectedStudentIds.length > 0 && (
+          <div className="flex flex-wrap items-center justify-between gap-3 p-3 bg-blue-50 border border-blue-200 rounded-lg text-xs animate-in fade-in duration-150">
+            <div className="flex items-center gap-2 font-semibold text-blue-900">
+              <span className="w-2 h-2 rounded-full bg-blue-600" />
+              <span>{selectedStudentIds.length} resident(s) selected</span>
+            </div>
 
-                  <td className="p-3 font-mono text-caption text-ink">
-                    {formatCnic(student.cnic)}
-                  </td>
-
-                  <td className="p-3 space-y-0.5 text-caption">
-                    <p className="font-mono text-ink flex items-center gap-1">
-                      <Phone className="w-3 h-3 text-brass" />
-                      <span>{student.phone}</span>
-                    </p>
-                    <p className="font-mono text-micro text-ink-muted">
-                      Guardian: {student.guardianPhone}
-                    </p>
-                  </td>
-
-                  <td className="p-3 font-mono text-caption">
-                    <span className="border border-border bg-canvas-subtle px-2 py-0.5 font-medium text-ink">
-                      Suite #{student.roomNumber} ({student.bedLabel})
-                    </span>
-                    <p className="text-micro text-ink-muted mt-1">
-                      Tier {student.floorNumber}
-                    </p>
-                  </td>
-
-                  <td className="p-3 max-w-xs text-caption text-ink truncate" title={student.institution}>
-                    <p className="truncate font-medium">{student.institution}</p>
-                    <p className="text-micro text-ink-muted font-mono">
-                      Inducted: {formatDate(student.admissionDate)}
-                    </p>
-                  </td>
-
-                  <td className="p-3 font-mono text-caption">
-                    <p className="text-brass font-medium">
-                      {formatCurrency(student.monthlyRate)}/mo
-                    </p>
-                    {student.pendingArrears > 0 ? (
-                      <p className="text-micro text-status-unpaid">
-                        Arrears: {formatCurrency(student.pendingArrears)}
-                      </p>
-                    ) : (
-                      <p className="text-micro text-status-occupied">
-                        Zero Arrears
-                      </p>
-                    )}
-                  </td>
-
-                  <td className="p-3 text-right">
-                    <button
-                      onClick={() => {
-                        setTransferTargetStudent(student);
-                        setTransferRoomNumber(student.roomNumber);
-                        setTransferBedLabel(student.bedLabel);
-                        setTransferRate(student.monthlyRate);
-                      }}
-                      className="inline-flex items-center gap-1 text-micro font-mono border border-border px-2.5 py-1 bg-canvas-surface hover:bg-canvas-subtle text-ink transition-colors"
-                      title="Reassign Chamber / Bed"
-                    >
-                      <ArrowRightLeft className="w-3 h-3 text-brass" />
-                      <span>Transfer</span>
-                    </button>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Register Resident Modal */}
-      {showAddStudentModal && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-canvas-surface border border-border w-full max-w-xl my-8 p-6 space-y-4 shadow-xl">
-            <div className="flex items-center justify-between pb-3 border-b border-border">
-              <h3 className="font-serif text-subhead text-ink font-medium">
-                Register New Resident Biodata
-              </h3>
+            <div className="flex items-center gap-2">
               <button
-                onClick={() => setShowAddStudentModal(false)}
-                className="text-ink-muted hover:text-ink"
+                type="button"
+                onClick={() => bulkSendRentReminder(selectedStudentIds)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-blue-300 hover:bg-blue-100/50 text-blue-800 font-semibold rounded-md shadow-xs transition-colors"
+              >
+                <Send className="w-3.5 h-3.5 text-blue-600" />
+                <span>Bulk Send Rent Reminder</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  bulkMarkPaid(selectedStudentIds);
+                  setSelectedStudentIds([]);
+                }}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-md shadow-xs transition-colors"
+              >
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                <span>Bulk Mark Paid</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setSelectedStudentIds([])}
+                className="p-1 text-slate-400 hover:text-slate-600"
+                title="Deselect all"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
+          </div>
+        )}
+      </div>
 
-            <form onSubmit={handleRegisterStudent} className="space-y-4">
+      {/* Main Data Table with Skeleton Loader (UX Patterns #2 & #11) */}
+      {isLoading ? (
+        <TableSkeleton rows={6} cols={7} />
+      ) : (
+        <DataTable
+          data={filteredStudents}
+          columns={columns}
+          keyExtractor={(s) => s.id}
+          selectable={true}
+          selectedIds={selectedStudentIds}
+          onSelectionChange={setSelectedStudentIds}
+          emptyTitle="No residents found"
+          emptySubtitle="Try adjusting your search query or floor filter."
+          defaultPageSize={10}
+        />
+      )}
+
+      {/* Enroll Resident Modal with Smart Inline Validation (UX Pattern #9) */}
+      {showAddModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs">
+          <div className="w-full max-w-xl bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 shadow-2xl space-y-5 animate-in fade-in zoom-in-95 duration-150 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div>
+                <h3 className="text-lg font-bold text-slate-900">
+                  Enroll New Student Resident
+                </h3>
+                <p className="text-xs text-slate-500">
+                  Enter student identity, guardian contact, and chamber details.
+                </p>
+              </div>
+              <button
+                onClick={() => setShowAddModal(false)}
+                className="p-1 text-slate-400 hover:text-slate-600"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleAddSubmit} className="space-y-4">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-caption font-medium text-ink mb-1">
-                    Legal Full Name *
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    Student Full Name *
                   </label>
                   <input
                     type="text"
                     required
-                    placeholder="e.g. Daniyal Farooq"
                     value={newStudent.name}
                     onChange={(e) => setNewStudent({ ...newStudent, name: e.target.value })}
-                    className="w-full border border-border px-3 py-2 text-body bg-canvas focus:outline-hidden focus:border-brass"
+                    placeholder="e.g. Zaid Bin Tariq"
+                    className="w-full text-xs font-medium px-3.5 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-600"
                   />
                 </div>
-
                 <div>
-                  <label className="block text-caption font-medium text-ink mb-1">
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
                     Father / Guardian Name *
                   </label>
                   <input
                     type="text"
                     required
-                    placeholder="e.g. Farooq Bashir"
                     value={newStudent.fatherName}
                     onChange={(e) => setNewStudent({ ...newStudent, fatherName: e.target.value })}
-                    className="w-full border border-border px-3 py-2 text-body bg-canvas focus:outline-hidden focus:border-brass"
+                    placeholder="e.g. Tariq Mehmood"
+                    className="w-full text-xs font-medium px-3.5 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-600"
                   />
                 </div>
               </div>
 
+              {/* CNIC with Smart Validation (UX Pattern #9) */}
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-xs font-semibold text-slate-700">
+                    Pakistani CNIC (13 digits) *
+                  </label>
+                  {newStudent.cnic && (
+                    <span
+                      className={`text-[11px] font-semibold flex items-center gap-1 ${
+                        isCnicValid ? "text-emerald-600" : "text-red-500"
+                      }`}
+                    >
+                      {isCnicValid ? <Check className="w-3 h-3" /> : <AlertCircle className="w-3 h-3" />}
+                      {isCnicValid ? "Valid format" : "Format: 35201-XXXXXXX-X"}
+                    </span>
+                  )}
+                </div>
+                <input
+                  type="text"
+                  required
+                  value={newStudent.cnic}
+                  onChange={(e) => setNewStudent({ ...newStudent, cnic: e.target.value })}
+                  placeholder="35201-1234567-1"
+                  className={`w-full text-xs font-mono px-3.5 py-2 rounded-lg border focus:outline-none focus:ring-2 ${
+                    newStudent.cnic && !isCnicValid
+                      ? "border-red-300 focus:ring-red-500 bg-red-50/20"
+                      : "border-slate-300 focus:ring-blue-600"
+                  }`}
+                />
+              </div>
+
+              {/* Phone with Smart Validation (UX Pattern #9) */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-caption font-medium text-ink mb-1">
-                    CNIC / B-Form Number *
-                  </label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-xs font-semibold text-slate-700">
+                      Resident Mobile *
+                    </label>
+                    {newStudent.phone && (
+                      <span
+                        className={`text-[10px] font-semibold ${
+                          isPhoneValid ? "text-emerald-600" : "text-red-500"
+                        }`}
+                      >
+                        {isPhoneValid ? "Valid" : "03XX-XXXXXXX"}
+                      </span>
+                    )}
+                  </div>
                   <input
                     type="text"
                     required
-                    placeholder="35201-1928401-7"
-                    value={newStudent.cnic}
-                    onChange={(e) => setNewStudent({ ...newStudent, cnic: e.target.value })}
-                    className="w-full border border-border px-3 py-2 text-body bg-canvas focus:outline-hidden focus:border-brass font-mono"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-caption font-medium text-ink mb-1">
-                    Primary Cell Phone *
-                  </label>
-                  <input
-                    type="tel"
-                    required
-                    placeholder="+92 300 1234567"
                     value={newStudent.phone}
                     onChange={(e) => setNewStudent({ ...newStudent, phone: e.target.value })}
-                    className="w-full border border-border px-3 py-2 text-body bg-canvas focus:outline-hidden focus:border-brass font-mono"
+                    placeholder="0300-1234567"
+                    className={`w-full text-xs font-mono px-3.5 py-2 rounded-lg border focus:outline-none focus:ring-2 ${
+                      newStudent.phone && !isPhoneValid
+                        ? "border-red-300 focus:ring-red-500"
+                        : "border-slate-300 focus:ring-blue-600"
+                    }`}
                   />
                 </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-caption font-medium text-ink mb-1">
-                    Guardian Emergency Phone *
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    Guardian Phone *
                   </label>
                   <input
-                    type="tel"
+                    type="text"
                     required
-                    placeholder="+92 321 8492019"
                     value={newStudent.guardianPhone}
                     onChange={(e) => setNewStudent({ ...newStudent, guardianPhone: e.target.value })}
-                    className="w-full border border-border px-3 py-2 text-body bg-canvas focus:outline-hidden focus:border-brass font-mono"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-caption font-medium text-ink mb-1">
-                    Academic Institution / Firm
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="e.g. LUMS, FAST, FC College"
-                    value={newStudent.institution}
-                    onChange={(e) => setNewStudent({ ...newStudent, institution: e.target.value })}
-                    className="w-full border border-border px-3 py-2 text-body bg-canvas focus:outline-hidden focus:border-brass"
+                    placeholder="0321-7654321"
+                    className="w-full text-xs font-mono px-3.5 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-600"
                   />
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-3">
+              {/* University & Room Allocation */}
+              <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-caption font-medium text-ink mb-1">
-                    Chamber Suite
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    College / University *
                   </label>
                   <input
                     type="text"
                     required
-                    placeholder="101"
+                    value={newStudent.institution}
+                    onChange={(e) => setNewStudent({ ...newStudent, institution: e.target.value })}
+                    placeholder="e.g. LUMS / FAST / PU"
+                    className="w-full text-xs font-medium px-3.5 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    Assigned Room *
+                  </label>
+                  <input
+                    type="text"
+                    required
                     value={newStudent.roomNumber}
                     onChange={(e) => setNewStudent({ ...newStudent, roomNumber: e.target.value })}
-                    className="w-full border border-border px-3 py-2 text-body bg-canvas focus:outline-hidden focus:border-brass"
+                    placeholder="e.g. 102"
+                    className="w-full text-xs font-medium px-3.5 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-600"
                   />
                 </div>
+              </div>
 
+              {/* Rent & Advance Paid */}
+              <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-caption font-medium text-ink mb-1">
-                    Bed Label
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="Bed A"
-                    value={newStudent.bedLabel}
-                    onChange={(e) => setNewStudent({ ...newStudent, bedLabel: e.target.value })}
-                    className="w-full border border-border px-3 py-2 text-body bg-canvas focus:outline-hidden focus:border-brass"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-caption font-medium text-ink mb-1">
-                    Monthly Tariff (Rs.)
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    Monthly Rent (PKR) *
                   </label>
                   <input
                     type="number"
                     required
                     value={newStudent.monthlyRate}
                     onChange={(e) => setNewStudent({ ...newStudent, monthlyRate: Number(e.target.value) })}
-                    className="w-full border border-border px-3 py-2 text-body bg-canvas focus:outline-hidden focus:border-brass font-mono"
+                    className="w-full text-xs font-mono px-3.5 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-600 tabular-nums"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    Advance Security Deposit (PKR)
+                  </label>
+                  <input
+                    type="number"
+                    value={newStudent.advancePaid}
+                    onChange={(e) => setNewStudent({ ...newStudent, advancePaid: Number(e.target.value) })}
+                    className="w-full text-xs font-mono px-3.5 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-600 tabular-nums"
                   />
                 </div>
               </div>
 
-              <div className="flex justify-end gap-2 pt-3 border-t border-border">
+              <div className="flex items-center justify-end gap-2.5 pt-4 border-t border-slate-100">
                 <button
                   type="button"
-                  onClick={() => setShowAddStudentModal(false)}
-                  className="px-4 py-2 border border-border text-caption text-ink-muted hover:text-ink"
+                  onClick={() => setShowAddModal(false)}
+                  className="px-4 py-2 text-xs font-semibold text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-brass text-white text-caption font-medium hover:bg-brass-hover transition-colors"
+                  disabled={!isCnicValid || !isPhoneValid || !isRentValid}
+                  className="px-5 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg shadow-xs"
                 >
-                  Save Resident Record
+                  Enroll Resident
                 </button>
               </div>
             </form>
@@ -509,88 +608,117 @@ export default function StudentsPage() {
         </div>
       )}
 
-      {/* Transfer Chamber Modal */}
-      {transferTargetStudent && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-canvas-surface border border-border w-full max-w-md p-6 space-y-4 shadow-xl">
-            <div className="flex items-center justify-between pb-3 border-b border-border">
-              <h3 className="font-serif text-subhead text-ink font-medium">
-                Reassign Chamber &amp; Bed Slot
-              </h3>
-              <button
-                onClick={() => setTransferTargetStudent(null)}
-                className="text-ink-muted hover:text-ink"
-              >
-                <X className="w-4 h-4" />
-              </button>
+      {/* Edit Resident Profile Drawer with AUTOSAVE (UX Pattern #6) */}
+      {editingStudent && (
+        <div className="fixed inset-0 z-50 flex items-center justify-end bg-slate-900/40 backdrop-blur-xs">
+          <div className="w-full max-w-md h-full bg-white border-l border-slate-200 p-6 flex flex-col justify-between shadow-2xl animate-in slide-in-from-right duration-200">
+            <div className="space-y-5">
+              <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                <div>
+                  <h3 className="text-base font-bold text-slate-900">
+                    Edit Resident Profile
+                  </h3>
+                  <p className="text-xs text-slate-500">Live autosaving enabled</p>
+                </div>
+                <button
+                  onClick={() => setEditingStudent(null)}
+                  className="p-1 text-slate-400 hover:text-slate-600"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Autosave Status Badge (UX Pattern #6) */}
+              {saveStatus && (
+                <div className="p-2 bg-emerald-50 border border-emerald-200 rounded-lg text-xs font-semibold text-emerald-800 flex items-center gap-1.5 animate-in fade-in duration-150">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>{saveStatus}</span>
+                </div>
+              )}
+
+              <div className="space-y-4 text-xs">
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">Resident Name</label>
+                  <input
+                    type="text"
+                    value={editingStudent.name}
+                    onChange={(e) => handleAutosaveField("name", e.target.value)}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">Contact Phone</label>
+                  <input
+                    type="text"
+                    value={editingStudent.phone}
+                    onChange={(e) => handleAutosaveField("phone", e.target.value)}
+                    className="w-full font-mono px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">College / University</label>
+                  <input
+                    type="text"
+                    value={editingStudent.institution}
+                    onChange={(e) => handleAutosaveField("institution", e.target.value)}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">Monthly Rent Rate (PKR)</label>
+                  <input
+                    type="number"
+                    value={editingStudent.monthlyRate}
+                    onChange={(e) => handleAutosaveField("monthlyRate", Number(e.target.value))}
+                    className="w-full font-mono px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 tabular-nums"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">Mess Service Status</label>
+                  <select
+                    value={editingStudent.messStatus || "ON"}
+                    onChange={(e) => handleAutosaveField("messStatus", e.target.value)}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                  >
+                    <option value="ON">Mess Active (ON)</option>
+                    <option value="OFF">Mess Suspended (OFF)</option>
+                  </select>
+                </div>
+              </div>
             </div>
 
-            <form onSubmit={handleConfirmTransfer} className="space-y-4">
-              <div className="p-3 bg-canvas-subtle border border-border text-caption space-y-1">
-                <p className="font-medium text-ink">Resident: {transferTargetStudent.name}</p>
-                <p className="text-ink-muted">Current: Suite #{transferTargetStudent.roomNumber} ({transferTargetStudent.bedLabel})</p>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-caption font-medium text-ink mb-1">
-                    New Suite Number *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={transferRoomNumber}
-                    onChange={(e) => setTransferRoomNumber(e.target.value)}
-                    className="w-full border border-border px-3 py-2 text-body bg-canvas focus:outline-hidden focus:border-brass font-mono"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-caption font-medium text-ink mb-1">
-                    New Bed Slot *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={transferBedLabel}
-                    onChange={(e) => setTransferBedLabel(e.target.value)}
-                    className="w-full border border-border px-3 py-2 text-body bg-canvas focus:outline-hidden focus:border-brass font-mono"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-caption font-medium text-ink mb-1">
-                  Adjusted Monthly Tariff (Rs.) *
-                </label>
-                <input
-                  type="number"
-                  required
-                  value={transferRate}
-                  onChange={(e) => setTransferRate(Number(e.target.value))}
-                  className="w-full border border-border px-3 py-2 text-body bg-canvas focus:outline-hidden focus:border-brass font-mono"
-                />
-              </div>
-
-              <div className="flex justify-end gap-2 pt-2 border-t border-border">
-                <button
-                  type="button"
-                  onClick={() => setTransferTargetStudent(null)}
-                  className="px-4 py-2 border border-border text-caption text-ink-muted hover:text-ink"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-brass text-white text-caption font-medium hover:bg-brass-hover transition-colors"
-                >
-                  Confirm Transfer
-                </button>
-              </div>
-            </form>
+            <div className="pt-4 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => setEditingStudent(null)}
+                className="w-full py-2 bg-slate-900 text-white rounded-lg text-xs font-semibold hover:bg-slate-800 transition-colors"
+              >
+                Done Editing
+              </button>
+            </div>
           </div>
         </div>
       )}
+
+      {/* Destructive Delete Confirmation Modal (UX Pattern #19) */}
+      <DestructiveConfirmModal
+        isOpen={!!studentToDelete}
+        onClose={() => setStudentToDelete(null)}
+        onConfirm={() => {
+          if (studentToDelete) {
+            deleteStudent(studentToDelete.id);
+            setStudentToDelete(null);
+          }
+        }}
+        title="Remove Resident from Registry"
+        description="Are you sure you want to permanently remove this student record? This will vacate their allocated bed and archive all historic records."
+        itemName={studentToDelete ? `${studentToDelete.name} (CNIC: ${studentToDelete.cnic})` : undefined}
+        confirmButtonText="Delete Resident"
+      />
     </div>
   );
 }

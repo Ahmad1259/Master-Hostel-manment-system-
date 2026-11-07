@@ -1,309 +1,304 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { useApp } from "../../../lib/store";
 import { StaffItem } from "../../../lib/mock-data";
+import { formatCurrency } from "../../../lib/utils";
 import hostelConfig from "../../../../hostel.config";
-import { formatCurrency, formatDate } from "../../../lib/utils";
 import {
   UserCheck,
   Search,
   Filter,
-  Printer,
   CheckCircle2,
   Clock,
-  AlertCircle,
-  Plus,
-  X,
-  CreditCard,
-  Shield,
-  Phone,
   Briefcase,
+  Phone,
+  Printer,
+  DollarSign,
+  X,
+  Plus,
+  Shield,
+  Utensils,
+  Sparkles,
+  Users,
 } from "lucide-react";
 
 export default function StaffPage() {
-  const {
-    staff,
-    updateStaffAttendance,
-    disburseSalary,
-    t,
-  } = useApp();
+  const { staff, updateStaffAttendance, disburseSalary, showToast } = useApp();
 
+  const [searchQuery, setSearchQuery] = useState("");
+  const [roleFilter, setRoleFilter] = useState("ALL");
   const [selectedStaffForSlip, setSelectedStaffForSlip] = useState<StaffItem | null>(null);
-  const [showSlipModal, setShowSlipModal] = useState(false);
 
-  // Bonus/Deduction state for slip
-  const [bonusAmount, setBonusAmount] = useState<number>(0);
-  const [deductionAmount, setDeductionAmount] = useState<number>(0);
+  const filteredStaff = useMemo(() => {
+    return staff.filter((member) => {
+      if (searchQuery) {
+        const q = searchQuery.toLowerCase();
+        const matches =
+          member.name.toLowerCase().includes(q) ||
+          member.role.toLowerCase().includes(q) ||
+          member.phone.includes(q);
+        if (!matches) return false;
+      }
 
-  const handlePrint = () => {
-    window.print();
+      if (roleFilter !== "ALL" && member.role !== roleFilter) {
+        return false;
+      }
+
+      return true;
+    });
+  }, [staff, searchQuery, roleFilter]);
+
+  const totalPayroll = staff.reduce((acc, m) => acc + m.monthlySalary, 0);
+  const presentCount = staff.filter((m) => m.attendanceToday === "PRESENT").length;
+
+  const handleDisburse = (member: StaffItem) => {
+    disburseSalary(member.id);
+    showToast(`Salary disbursed for ${member.name} (${member.role}).`, "success");
   };
 
-  const handleDisburse = (staffId: string) => {
-    disburseSalary(staffId);
+  const getRoleIcon = (role: string) => {
+    switch (role) {
+      case "Cook":
+        return Utensils;
+      case "Warden":
+        return Shield;
+      default:
+        return Briefcase;
+    }
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-in fade-in duration-150">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-border">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-200">
         <div>
-          <span className="text-caption font-mono uppercase text-brass tracking-widest">
-            Module 04 • Personnel Directorate
+          <span className="text-xs font-semibold text-blue-600 uppercase tracking-wide">
+            Personnel &amp; Human Resources
           </span>
-          <h1 className="font-serif text-title tracking-tight text-ink mt-0.5">
-            {t.staffTitle}
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 mt-1">
+            Hostel Staff &amp; Payroll Roster
           </h1>
-          <p className="text-body text-ink-muted">
-            {t.staffSubtitle}
+          <p className="text-sm text-slate-600 mt-0.5">
+            Warden supervision, kitchen cooks, housekeeping team, and monthly salary disbursement.
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 border border-border bg-canvas-surface px-3 py-1.5 text-caption font-mono">
-            <CheckCircle2 className="w-3.5 h-3.5 text-status-occupied" />
-            <span>Biometric Duty Roster Active</span>
-          </div>
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-semibold text-slate-700 bg-white border border-slate-200 rounded-lg px-3.5 py-2 shadow-xs">
+            Total Monthly Payroll: <strong className="text-slate-900 font-mono tabular-nums">{formatCurrency(totalPayroll)}</strong>
+          </span>
         </div>
       </div>
 
-      {/* Staff Roster & Daily Attendance Table */}
-      <div className="border border-border bg-canvas-surface overflow-x-auto">
-        <table className="w-full text-left text-body border-collapse">
-          <thead>
-            <tr className="border-b border-border bg-canvas-subtle text-micro font-mono text-ink-muted uppercase">
-              <th className="p-3 font-semibold">Staff Identity</th>
-              <th className="p-3 font-semibold">Assigned Role</th>
-              <th className="p-3 font-semibold">Base Honorarium</th>
-              <th className="p-3 font-semibold">Today&apos;s Duty Status</th>
-              <th className="p-3 font-semibold">Shift Timings</th>
-              <th className="p-3 font-semibold">Last Payroll</th>
-              <th className="p-3 font-semibold text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-border">
-            {staff.map((stf) => (
-              <tr key={stf.id} className="hover:bg-canvas-subtle/50 transition-colors">
-                <td className="p-3">
-                  <p className="font-serif text-subhead font-medium text-ink leading-tight">
-                    {stf.name}
-                  </p>
-                  <p className="text-micro text-ink-muted font-mono flex items-center gap-1 mt-0.5">
-                    <Phone className="w-3 h-3 text-brass" />
-                    <span>{stf.phone}</span>
-                  </p>
-                </td>
+      {/* KPI Stats */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs">
+          <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide block">
+            Total Staff Employed
+          </span>
+          <p className="text-3xl font-bold text-slate-900 mt-1 tabular-nums">
+            {staff.length}
+          </p>
+          <p className="text-[11px] text-slate-500 mt-1">Warden, Cooks, Housekeeping &amp; Security</p>
+        </div>
 
-                <td className="p-3">
-                  <span className="inline-block border border-border bg-canvas-subtle px-2 py-0.5 text-caption font-mono font-medium text-ink">
-                    {stf.role}
-                  </span>
-                  <p className="text-micro text-ink-muted mt-0.5 font-mono">
-                    Since {formatDate(stf.joiningDate)}
-                  </p>
-                </td>
+        <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs">
+          <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide block">
+            Attendance Today
+          </span>
+          <p className="text-3xl font-bold text-emerald-600 mt-1 tabular-nums">
+            {presentCount} / {staff.length}
+          </p>
+          <p className="text-[11px] text-slate-500 mt-1">All critical duty posts staffed</p>
+        </div>
 
-                <td className="p-3 font-mono text-caption font-medium text-ink">
-                  {formatCurrency(stf.monthlySalary)}/mo
-                </td>
-
-                <td className="p-3">
-                  <div className="flex items-center gap-2">
-                    <select
-                      value={stf.attendanceToday}
-                      onChange={(e) =>
-                        updateStaffAttendance(
-                          stf.id,
-                          e.target.value as "PRESENT" | "ABSENT" | "LEAVE"
-                        )
-                      }
-                      className={`text-caption font-mono uppercase px-2 py-1 border text-micro ${
-                        stf.attendanceToday === "PRESENT"
-                          ? "bg-emerald-50 text-emerald-800 border-emerald-300"
-                          : stf.attendanceToday === "LEAVE"
-                          ? "bg-amber-50 text-amber-800 border-amber-300"
-                          : "bg-red-50 text-red-800 border-red-300"
-                      }`}
-                    >
-                      <option value="PRESENT">On Duty (Present)</option>
-                      <option value="LEAVE">Authorized Leave</option>
-                      <option value="ABSENT">Unexcused Absence</option>
-                    </select>
-                  </div>
-                </td>
-
-                <td className="p-3 font-mono text-caption text-ink-muted">
-                  <p>In: {stf.checkIn || "08:00 AM"}</p>
-                  <p className="text-micro">Out: {stf.checkOut || "05:00 PM"}</p>
-                </td>
-
-                <td className="p-3 font-mono text-caption">
-                  <span className="text-zinc-700 block">{stf.lastSalaryMonth}</span>
-                  <span
-                    className={`inline-block text-micro font-mono uppercase px-1.5 py-0.2 mt-0.5 ${
-                      stf.lastSalaryStatus === "PAID"
-                        ? "bg-emerald-100 text-emerald-800 border border-emerald-200"
-                        : "bg-amber-100 text-amber-800 border border-amber-200"
-                    }`}
-                  >
-                    {stf.lastSalaryStatus}
-                  </span>
-                </td>
-
-                <td className="p-3 text-right space-x-1.5 whitespace-nowrap">
-                  {/* Disburse Salary Button */}
-                  <button
-                    onClick={() => handleDisburse(stf.id)}
-                    className="inline-flex items-center gap-1 text-micro font-mono border border-border bg-ink text-canvas hover:bg-brass px-2.5 py-1 transition-colors"
-                  >
-                    <CreditCard className="w-3 h-3" />
-                    <span>Disburse</span>
-                  </button>
-
-                  {/* Print Salary Slip */}
-                  <button
-                    onClick={() => {
-                      setSelectedStaffForSlip(stf);
-                      setShowSlipModal(true);
-                    }}
-                    className="inline-flex items-center gap-1 text-micro font-mono border border-border bg-canvas-surface hover:bg-canvas-subtle text-ink px-2.5 py-1 transition-colors"
-                  >
-                    <Printer className="w-3 h-3 text-brass" />
-                    <span>Pay Slip</span>
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs">
+          <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide block">
+            Payroll Status
+          </span>
+          <p className="text-lg font-bold text-slate-900 mt-1 flex items-center gap-1.5">
+            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+            <span>Disbursements Active</span>
+          </p>
+          <p className="text-[11px] text-slate-500 mt-1">Direct bank vouchers ready</p>
+        </div>
       </div>
 
-      {/* Salary Slip Print Modal */}
-      {showSlipModal && selectedStaffForSlip && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-canvas-surface border border-border w-full max-w-lg p-6 sm:p-8 shadow-2xl space-y-6">
-            <div className="flex items-center justify-between pb-4 border-b border-border print:hidden">
-              <span className="font-serif text-subhead tracking-tight text-ink font-medium">
-                Official Personnel Honorarium Voucher
-              </span>
-              <div className="flex items-center gap-2">
+      {/* Filter and Search Bar */}
+      <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-xs flex flex-col md:flex-row gap-3 items-center justify-between">
+        <div className="relative w-full md:w-80">
+          <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search staff name or phone..."
+            className="w-full text-xs font-medium pl-10 pr-4 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-600"
+          />
+        </div>
+
+        <div className="flex items-center gap-2 w-full md:w-auto">
+          <select
+            value={roleFilter}
+            onChange={(e) => setRoleFilter(e.target.value)}
+            className="text-xs font-semibold bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-slate-800 focus:outline-none"
+          >
+            <option value="ALL">All Roles ({staff.length})</option>
+            <option value="Warden">Chief &amp; Floor Wardens</option>
+            <option value="Cook">Mess Kitchen Cooks</option>
+            <option value="Cleaner">Cleaners &amp; Housekeeping</option>
+            <option value="Guard">Security Guards</option>
+            <option value="Accountant">Accountant</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Staff Roster Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        {filteredStaff.map((member) => {
+          const Icon = getRoleIcon(member.role);
+          const isPaid = member.lastSalaryStatus === "PAID";
+          const isPresent = member.attendanceToday === "PRESENT";
+
+          return (
+            <div
+              key={member.id}
+              className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs flex flex-col justify-between space-y-4 hover:border-slate-300 transition-colors"
+            >
+              <div>
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-xs shrink-0">
+                      <Icon className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-bold text-slate-900">{member.name}</h3>
+                      <span className="text-[11px] font-semibold text-blue-600 block">
+                        {member.role}
+                      </span>
+                    </div>
+                  </div>
+
+                  <span
+                    className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                      isPresent
+                        ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                        : "bg-amber-50 text-amber-700 border border-amber-200"
+                    }`}
+                  >
+                    {member.attendanceToday}
+                  </span>
+                </div>
+
+                <div className="mt-4 p-3 bg-slate-50 rounded-lg space-y-1.5 text-xs">
+                  <div className="flex justify-between">
+                    <span className="text-slate-500">Contact:</span>
+                    <span className="font-mono text-slate-800 tabular-nums">{member.phone}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-500">Shift Timings:</span>
+                    <span className="text-slate-800 font-medium">
+                      {member.checkIn || "08:00 AM"} – {member.checkOut || "06:00 PM"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between border-t border-slate-200 pt-1.5">
+                    <span className="text-slate-500 font-semibold">Monthly Salary:</span>
+                    <span className="font-mono font-bold text-slate-900 tabular-nums">
+                      {formatCurrency(member.monthlySalary)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Buttons: Disburse Salary & Salary Slip */}
+              <div className="flex items-center justify-between pt-2 border-t border-slate-100">
                 <button
-                  onClick={handlePrint}
-                  className="inline-flex items-center gap-1.5 px-3 py-1 border border-border text-caption hover:bg-canvas-subtle"
+                  type="button"
+                  onClick={() => setSelectedStaffForSlip(member)}
+                  className="inline-flex items-center gap-1 text-xs text-slate-600 hover:text-slate-900 font-semibold transition-colors"
                 >
-                  <Printer className="w-3.5 h-3.5 text-brass" />
-                  <span>Print Slip</span>
+                  <Printer className="w-3.5 h-3.5" />
+                  <span>Salary Slip</span>
                 </button>
-                <button
-                  onClick={() => setShowSlipModal(false)}
-                  className="p-1 border border-border text-ink-muted"
-                >
-                  <X className="w-4 h-4" />
-                </button>
+
+                {isPaid ? (
+                  <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-md border border-emerald-200">
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    <span>Disbursed ({member.lastSalaryMonth})</span>
+                  </span>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => handleDisburse(member)}
+                    className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-semibold shadow-2xs transition-colors"
+                  >
+                    Disburse Salary
+                  </button>
+                )}
               </div>
             </div>
+          );
+        })}
+      </div>
 
-            {/* Printable Slip Body */}
-            <div className="border border-zinc-300 p-6 bg-white space-y-4 print:border-none print:p-0">
-              <div className="text-center border-b border-zinc-800 pb-3">
-                <h2 className="font-serif font-bold text-lg text-zinc-900 uppercase">
-                  {hostelConfig.identity.name}
-                </h2>
-                <p className="text-micro font-mono text-zinc-600">
-                  {hostelConfig.identity.legalEntity} • Personnel Payroll Slip
+      {/* Salary Slip Modal */}
+      {selectedStaffForSlip && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs">
+          <div className="w-full max-w-md bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 shadow-2xl space-y-6 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-start justify-between border-b border-slate-100 pb-3">
+              <div>
+                <h3 className="text-base font-bold text-slate-900">Official Salary Voucher</h3>
+                <p className="text-xs text-slate-500">
+                  {hostelConfig.identity.name} • Payroll Department
                 </p>
-                <p className="text-caption font-mono font-medium text-brass mt-1">
-                  Month of November 2026
+              </div>
+              <button
+                onClick={() => setSelectedStaffForSlip(null)}
+                className="p-1 text-slate-400 hover:text-slate-600"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-3 text-xs">
+              <div className="p-3 bg-slate-50 rounded-lg space-y-1">
+                <p className="font-bold text-slate-900 text-sm">{selectedStaffForSlip.name}</p>
+                <p className="text-slate-500">
+                  Designation: <strong>{selectedStaffForSlip.role}</strong>
                 </p>
+                <p className="text-slate-500 font-mono">Disbursement Month: November 2026</p>
               </div>
 
-              <div className="grid grid-cols-2 gap-2 text-micro font-mono border-b border-zinc-200 pb-3">
-                <div>
-                  <span className="text-zinc-500">Employee:</span>
-                  <p className="font-bold text-zinc-900">{selectedStaffForSlip.name}</p>
-                </div>
-                <div>
-                  <span className="text-zinc-500">Assigned Function:</span>
-                  <p className="font-bold text-zinc-900">{selectedStaffForSlip.role}</p>
-                </div>
-                <div>
-                  <span className="text-zinc-500">Phone Contact:</span>
-                  <p>{selectedStaffForSlip.phone}</p>
-                </div>
-                <div>
-                  <span className="text-zinc-500">Voucher Ref:</span>
-                  <p>PAY-{selectedStaffForSlip.id}-202611</p>
-                </div>
-              </div>
-
-              {/* Adjustments in modal */}
-              <div className="grid grid-cols-2 gap-3 print:hidden text-caption">
-                <div>
-                  <label className="block text-zinc-600 mb-1">Bonus/Overtime (Rs.):</label>
-                  <input
-                    type="number"
-                    value={bonusAmount}
-                    onChange={(e) => setBonusAmount(Number(e.target.value))}
-                    className="w-full border border-zinc-300 px-2 py-1 font-mono"
-                  />
-                </div>
-                <div>
-                  <label className="block text-zinc-600 mb-1">Statutory Deductions (Rs.):</label>
-                  <input
-                    type="number"
-                    value={deductionAmount}
-                    onChange={(e) => setDeductionAmount(Number(e.target.value))}
-                    className="w-full border border-zinc-300 px-2 py-1 font-mono"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-1.5 text-caption font-mono pt-2">
-                <div className="flex justify-between py-1 border-b border-zinc-100">
-                  <span className="text-zinc-600">Base Monthly Salary:</span>
-                  <span className="font-bold text-zinc-900">
+              <div className="border border-slate-200 rounded-lg divide-y divide-slate-100">
+                <div className="p-2.5 flex justify-between">
+                  <span className="text-slate-600">Base Salary:</span>
+                  <span className="font-mono font-bold text-slate-900 tabular-nums">
                     {formatCurrency(selectedStaffForSlip.monthlySalary)}
                   </span>
                 </div>
-                {bonusAmount > 0 && (
-                  <div className="flex justify-between py-1 border-b border-zinc-100 text-emerald-700">
-                    <span>Performance Incentive:</span>
-                    <span>+{formatCurrency(bonusAmount)}</span>
-                  </div>
-                )}
-                {deductionAmount > 0 && (
-                  <div className="flex justify-between py-1 border-b border-zinc-100 text-red-700">
-                    <span>Advance / Tax Deductions:</span>
-                    <span>-{formatCurrency(deductionAmount)}</span>
-                  </div>
-                )}
-                <div className="flex justify-between py-2 border-t-2 border-zinc-900 font-bold text-base text-zinc-900">
-                  <span>Net Disbursed Honorarium:</span>
-                  <span>
-                    {formatCurrency(
-                      selectedStaffForSlip.monthlySalary + bonusAmount - deductionAmount
-                    )}
+                <div className="p-2.5 flex justify-between">
+                  <span className="text-slate-600">Meal Allowance:</span>
+                  <span className="text-emerald-700 font-medium">Included (Hostel Mess)</span>
+                </div>
+                <div className="p-2.5 flex justify-between bg-slate-50 font-bold">
+                  <span className="text-slate-900">Net Payable:</span>
+                  <span className="font-mono text-slate-900 tabular-nums">
+                    {formatCurrency(selectedStaffForSlip.monthlySalary)}
                   </span>
-                </div>
-              </div>
-
-              <div className="pt-8 flex justify-between text-micro text-zinc-500 font-mono">
-                <div className="border-t border-zinc-400 pt-1 text-center w-28">
-                  Staff Signature
-                </div>
-                <div className="border-t border-zinc-400 pt-1 text-center w-28">
-                  Bursar Clearance
                 </div>
               </div>
             </div>
 
-            <div className="text-right print:hidden">
+            <div className="flex items-center justify-between pt-3 border-t border-slate-100">
+              <span className="text-[11px] text-slate-400">Chief Warden Signature Required</span>
               <button
-                onClick={() => setShowSlipModal(false)}
-                className="px-4 py-2 border border-border text-caption text-ink-muted hover:text-ink"
+                type="button"
+                onClick={() => window.print()}
+                className="inline-flex items-center gap-1.5 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-semibold shadow-xs"
               >
-                Close Preview
+                <Printer className="w-3.5 h-3.5" />
+                <span>Print Voucher</span>
               </button>
             </div>
           </div>

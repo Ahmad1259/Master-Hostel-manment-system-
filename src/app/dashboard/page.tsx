@@ -2,8 +2,17 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import { motion } from "framer-motion";
 import { useApp } from "../../lib/store";
 import { formatCurrency, formatDate } from "../../lib/utils";
+import { MotionButton } from "../../components/motion/motion-button";
+import {
+  pageEntranceVariants,
+  staggerListVariants,
+  staggerRowVariants,
+  EASE_IN_OUT,
+  buttonPressProps,
+} from "../../lib/motion";
 import {
   Layers,
   Users,
@@ -54,7 +63,12 @@ export default function DashboardOverviewPage() {
   const openComplaints = complaints.filter((c) => c.status !== "RESOLVED").length;
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-150">
+    <motion.div
+      variants={pageEntranceVariants}
+      initial="hidden"
+      animate="visible"
+      className="space-y-8"
+    >
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-200">
         <div>
@@ -72,27 +86,30 @@ export default function DashboardOverviewPage() {
           </p>
         </div>
 
-        {/* Quick Action Buttons */}
+        {/* Quick Action Buttons (Rule 4: Scale to 0.97 on press) */}
         <div className="flex flex-wrap items-center gap-2.5">
-          <Link
-            href="/dashboard/students"
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-xs transition-colors"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            <span>Enroll Resident</span>
+          <Link href="/dashboard/students">
+            <MotionButton variant="primary" size="sm">
+              <Plus className="w-3.5 h-3.5" />
+              <span>Enroll Resident</span>
+            </MotionButton>
           </Link>
-          <Link
-            href="/dashboard/fees"
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 rounded-lg shadow-xs transition-colors"
-          >
-            <Receipt className="w-3.5 h-3.5 text-slate-500" />
-            <span>Record Payment</span>
+          <Link href="/dashboard/fees">
+            <MotionButton variant="outline" size="sm">
+              <Receipt className="w-3.5 h-3.5 text-slate-500" />
+              <span>Record Payment</span>
+            </MotionButton>
           </Link>
         </div>
       </div>
 
-      {/* 5 Core Required Metrics Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+      {/* 5 Core Required Metrics Grid (Rule 3: Stagger list by 30ms) */}
+      <motion.div
+        variants={staggerListVariants}
+        initial="hidden"
+        animate="visible"
+        className="grid grid-cols-2 lg:grid-cols-5 gap-4"
+      >
         {/* Metric 1: Total Rooms */}
         <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs">
           <div className="flex items-center justify-between">
@@ -174,7 +191,7 @@ export default function DashboardOverviewPage() {
           </p>
           <p className="text-[11px] text-slate-500 mt-1">Outstanding receivables</p>
         </div>
-      </div>
+      </motion.div>
 
       {/* Middle Operations Section: Two-Column Breakdown */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -375,6 +392,6 @@ export default function DashboardOverviewPage() {
           </table>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }

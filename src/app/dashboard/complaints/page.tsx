@@ -1,9 +1,17 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
+import { motion } from "framer-motion";
 import { useApp } from "../../../lib/store";
 import { ComplaintItem } from "../../../lib/mock-data";
 import { DestructiveConfirmModal } from "../../../components/ui/destructive-modal";
+import { MotionButton } from "../../../components/motion/motion-button";
+import {
+  pageEntranceVariants,
+  staggerListVariants,
+  staggerRowVariants,
+  EASE_IN_OUT,
+} from "../../../lib/motion";
 import {
   AlertCircle,
   Plus,
@@ -106,7 +114,12 @@ export default function ComplaintsPage() {
   };
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-150">
+    <motion.div
+      variants={pageEntranceVariants}
+      initial="hidden"
+      animate="visible"
+      className="space-y-6"
+    >
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-200">
         <div>
@@ -121,14 +134,15 @@ export default function ComplaintsPage() {
           </p>
         </div>
 
-        <button
-          type="button"
+        <MotionButton
+          variant="primary"
+          size="md"
           onClick={() => setShowRaiseModal(true)}
-          className="inline-flex items-center gap-1.5 px-4 py-2.5 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-xs transition-colors self-start sm:self-auto"
+          className="self-start sm:self-auto"
         >
           <Plus className="w-4 h-4" />
           <span>Raise New Complaint</span>
-        </button>
+        </MotionButton>
       </div>
 
       {/* KPI Counters */}
@@ -216,12 +230,20 @@ export default function ComplaintsPage() {
           </p>
         </div>
       ) : (
-        <div className="space-y-3">
+        <motion.div
+          variants={staggerListVariants}
+          initial="hidden"
+          animate="visible"
+          className="space-y-3"
+        >
           {filteredComplaints.map((item) => {
             const Icon = getCategoryIcon(item.category);
             return (
-              <div
+              <motion.div
                 key={item.id}
+                variants={staggerRowVariants}
+                layout
+                transition={{ layout: { ease: EASE_IN_OUT, duration: 0.22 } }}
                 className="bg-white border border-slate-200 rounded-xl p-4 sm:p-5 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:border-slate-300 transition-colors"
               >
                 <div className="flex items-start gap-3.5">
@@ -296,10 +318,10 @@ export default function ComplaintsPage() {
                     <Trash2 className="w-4 h-4" />
                   </button>
                 </div>
-              </div>
+              </motion.div>
             );
           })}
-        </div>
+        </motion.div>
       )}
 
       {/* Raise Complaint Modal */}
@@ -475,6 +497,6 @@ export default function ComplaintsPage() {
         itemName={complaintToDelete ? `${complaintToDelete.title} (Room ${complaintToDelete.roomNumber})` : undefined}
         confirmButtonText="Delete Ticket"
       />
-    </div>
+    </motion.div>
   );
 }

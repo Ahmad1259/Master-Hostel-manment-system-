@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useMemo, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useApp } from "../../../lib/store";
 import { StudentItem } from "../../../lib/mock-data";
 import { formatCurrency, formatDate } from "../../../lib/utils";
@@ -8,6 +9,13 @@ import { useDebounce } from "../../../hooks/use-debounce";
 import { DataTable, Column } from "../../../components/ui/data-table";
 import { TableSkeleton } from "../../../components/ui/skeleton-loaders";
 import { DestructiveConfirmModal } from "../../../components/ui/destructive-modal";
+import { StudentDetailDrawer } from "../../../components/motion/student-detail-drawer";
+import { MotionButton } from "../../../components/motion/motion-button";
+import {
+  pageEntranceVariants,
+  modalOverlayVariants,
+  modalDialogVariants,
+} from "../../../lib/motion";
 import {
   Users,
   Search,
@@ -59,6 +67,7 @@ export default function StudentsPage() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingStudent, setEditingStudent] = useState<StudentItem | null>(null);
   const [studentToDelete, setStudentToDelete] = useState<StudentItem | null>(null);
+  const [inspectingStudent, setInspectingStudent] = useState<StudentItem | null>(null);
 
   // New Student Form State with Smart Validation (UX Pattern #9)
   const [newStudent, setNewStudent] = useState({
@@ -176,10 +185,20 @@ export default function StudentsPage() {
       header: "Resident Name",
       sortable: true,
       render: (s) => (
-        <div>
-          <span className="font-bold text-slate-900 block">{s.name}</span>
-          <span className="text-[11px] text-slate-500 block">S/O {s.fatherName}</span>
-        </div>
+        <motion.div
+          layoutId={`student-card-${s.id}`} // Rule 20: shared layoutId
+          className="flex items-center gap-2.5"
+        >
+          <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-xs shrink-0">
+            {s.name.charAt(0)}
+          </div>
+          <div>
+            <span className="font-bold text-slate-900 block leading-tight hover:text-blue-600 transition-colors">
+              {s.name}
+            </span>
+            <span className="text-[11px] text-slate-500 block">S/O {s.fatherName}</span>
+          </div>
+        </motion.div>
       ),
     },
     {
@@ -266,7 +285,12 @@ export default function StudentsPage() {
   ];
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-150">
+    <motion.div
+      variants={pageEntranceVariants}
+      initial="hidden"
+      animate="visible"
+      className="space-y-6"
+    >
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-200">
         <div>
@@ -277,18 +301,19 @@ export default function StudentsPage() {
             Registered Student Residents
           </h1>
           <p className="text-sm text-slate-600 mt-0.5">
-            Active resident profiles, room assignments, biometric tenancy records.
+            Active resident profiles, room assignments, biometric tenancy records. Click any resident to inspect details.
           </p>
         </div>
 
-        <button
-          type="button"
+        <MotionButton
+          variant="primary"
+          size="md"
           onClick={() => setShowAddModal(true)}
-          className="inline-flex items-center gap-1.5 px-4 py-2.5 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-xs transition-colors self-start sm:self-auto"
+          className="self-start sm:self-auto"
         >
           <Plus className="w-4 h-4" />
           <span>Enroll New Resident</span>
-        </button>
+        </MotionButton>
       </div>
 
       {/* Filter and Search Bar (UX Pattern #7 & #12) */}
@@ -397,6 +422,8 @@ export default function StudentsPage() {
           selectable={true}
           selectedIds={selectedStudentIds}
           onSelectionChange={setSelectedStudentIds}
+          onRowClick={(s) => setInspectingStudent(s)}
+          enableRubberBand={true}
           emptyTitle="No residents found"
           emptySubtitle="Try adjusting your search query or floor filter."
           defaultPageSize={10}
@@ -719,6 +746,17 @@ export default function StudentsPage() {
         itemName={studentToDelete ? `${studentToDelete.name} (CNIC: ${studentToDelete.cnic})` : undefined}
         confirmButtonText="Delete Resident"
       />
-    </div>
+
+      {/* Rule 6 & 20: Student Detail Drawer with shared layoutId & staggered settling */}
+      <StudentDetailDrawer
+        student={inspectingStudent}
+        onClose={() => setInspectingStudent(null)}
+        onSendRentReminder={(s) => bulkSendRentReminder([s.id])}
+        onMarkPaid={(s) => {
+          bulkMarkPaid([s.id]);
+          setInspectingStudent(null);
+        }}
+      />
+    </motion.div>
   );
 }

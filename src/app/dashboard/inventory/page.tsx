@@ -1,10 +1,19 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useApp } from "../../../lib/store";
 import { formatCurrency } from "../../../lib/utils";
-import { RoomItem, BedItem } from "../../../lib/mock-data";
+import { RoomItem, BedItem, FloorItem } from "../../../lib/mock-data";
 import { DestructiveConfirmModal } from "../../../components/ui/destructive-modal";
+import { BedArcTransferModal } from "../../../components/motion/bed-arc-transfer-modal";
+import { MotionButton } from "../../../components/motion/motion-button";
+import {
+  pageEntranceVariants,
+  staggerListVariants,
+  staggerRowVariants,
+  EASE_IN_OUT,
+} from "../../../lib/motion";
 import {
   Layers,
   Plus,
@@ -45,6 +54,7 @@ export default function InventoryPage() {
   const [showAddRoomModal, setShowAddRoomModal] = useState(false);
   const [showAddFloorModal, setShowAddFloorModal] = useState(false);
   const [roomToDelete, setRoomToDelete] = useState<RoomItem | null>(null);
+  const [arcTransferTarget, setArcTransferTarget] = useState<{ bed: BedItem; room: RoomItem } | null>(null);
 
   // New Room Form State
   const [newRoom, setNewRoom] = useState({
@@ -135,8 +145,40 @@ export default function InventoryPage() {
     showToast(`Bed ${bed.bedLabel} is now vacant.`, "info");
   };
 
+  const handleArcTransfer = (targetRoomId: string) => {
+    if (!arcTransferTarget) return;
+    const { bed } = arcTransferTarget;
+    if (!bed.studentId || !bed.studentName) return;
+
+    deallocateBed(bed.id);
+
+    let targetBedId: string | null = null;
+    let targetRoomNum = "";
+    floors.forEach((f) => {
+      f.rooms.forEach((r) => {
+        if (r.id === targetRoomId) {
+          targetRoomNum = r.roomNumber;
+          const avail = r.beds.find((b) => b.status === "AVAILABLE");
+          if (avail) targetBedId = avail.id;
+        }
+      });
+    });
+
+    if (targetBedId) {
+      allocateBed(targetBedId, bed.studentId, bed.studentName);
+      showToast(`Arc transfer complete: ${bed.studentName} relocated to Room ${targetRoomNum}.`, "success");
+    } else {
+      showToast("Selected chamber has no available beds.", "warning");
+    }
+  };
+
   return (
-    <div className="space-y-6 animate-in fade-in duration-150">
+    <motion.div
+      variants={pageEntranceVariants}
+      initial="hidden"
+      animate="visible"
+      className="space-y-6"
+    >
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-200">
         <div>
@@ -152,23 +194,23 @@ export default function InventoryPage() {
         </div>
 
         <div className="flex items-center gap-2.5">
-          <button
-            type="button"
+          <MotionButton
+            variant="outline"
+            size="sm"
             onClick={() => setShowAddFloorModal(true)}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 rounded-lg shadow-xs transition-colors"
           >
             <Plus className="w-3.5 h-3.5 text-slate-500" />
             <span>Add Floor</span>
-          </button>
+          </MotionButton>
 
-          <button
-            type="button"
+          <MotionButton
+            variant="primary"
+            size="sm"
             onClick={() => setShowAddRoomModal(true)}
-            className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-xs transition-colors"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>Add Chamber</span>
-          </button>
+          </MotionButton>
         </div>
       </div>
 
@@ -232,14 +274,22 @@ export default function InventoryPage() {
           <p className="text-xs text-slate-500 mt-1">Try resetting the floor or climate filter.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        <motion.div
+          variants={staggerListVariants}
+          initial="hidden"
+          animate="visible"
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5"
+        >
           {filteredRooms.map((room) => {
             const occupiedBedsCount = room.beds.filter((b) => b.status === "OCCUPIED").length;
             const isFull = occupiedBedsCount === room.capacity;
 
             return (
-              <div
+              <motion.div
                 key={room.id}
+                variants={staggerRowVariants}
+                layout
+                transition={{ layout: { ease: EASE_IN_OUT, duration: 0.22 } }}
                 className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs flex flex-col justify-between space-y-4 hover:border-slate-300 transition-colors"
               >
                 <div>
@@ -341,15 +391,25 @@ export default function InventoryPage() {
                               )}
                             </div>
 
-                            {/* Optimistic Allocation/Vacate Buttons */}
+                            {/* Optimistic Allocation/Vacate Buttons with Rule 7 Arc Transfer */}
                             {isOccupied ? (
-                              <button
-                                type="button"
-                                onClick={() => handleVacateBed(bed)}
-                                className="text-[10px] font-semibold text-slate-500 hover:text-red-600 underline"
-                              >
-                                Vacate
-                              </button>
+                              <div className="flex items-center gap-1.5">
+                                <button
+                                  type="button"
+                                  onClick={() => setArcTransferTarget({ bed, room })}
+                                  className="px-2 py-0.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded text-[10px] font-semibold transition-colors flex items-center gap-1 shadow-2xs"
+                                  title="Relocate via Arc Motion (Rule 7)"
+                                >
+                                  <span>Arc Move</span>
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleVacateBed(bed)}
+                                  className="text-[10px] font-semibold text-slate-400 hover:text-red-600 underline"
+                                >
+                                  Vacate
+                                </button>
+                              </div>
                             ) : (
                               <button
                                 type="button"
@@ -365,10 +425,10 @@ export default function InventoryPage() {
                     </div>
                   </div>
                 </div>
-              </div>
+              </motion.div>
             );
           })}
-        </div>
+        </motion.div>
       )}
 
       {/* Bed Assignment Modal (UX Pattern #1) */}
@@ -620,6 +680,18 @@ export default function InventoryPage() {
         itemName={roomToDelete ? `Room ${roomToDelete.roomNumber} (${roomToDelete.type})` : undefined}
         confirmButtonText="Delete Chamber"
       />
-    </div>
+
+      {/* Rule 7 & 9: Bed Arc Relocation Modal */}
+      {arcTransferTarget && (
+        <BedArcTransferModal
+          isOpen={!!arcTransferTarget}
+          onClose={() => setArcTransferTarget(null)}
+          bed={arcTransferTarget.bed}
+          currentRoom={arcTransferTarget.room}
+          floors={floors}
+          onTransfer={handleArcTransfer}
+        />
+      )}
+    </motion.div>
   );
 }

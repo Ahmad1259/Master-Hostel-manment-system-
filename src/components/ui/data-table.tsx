@@ -1,7 +1,20 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import { ChevronDown, ChevronUp, ChevronsUpDown, ChevronLeft, ChevronRight } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  ChevronDown,
+  ChevronUp,
+  ChevronsUpDown,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
+import {
+  staggerListVariants,
+  staggerRowVariants,
+  EASE_IN_OUT,
+  EASE_OUT_EXPO,
+} from "../../lib/motion";
 
 export interface Column<T> {
   key: string;
@@ -21,8 +34,15 @@ interface DataTableProps<T> {
   emptyTitle?: string;
   emptySubtitle?: string;
   defaultPageSize?: number;
+  onRowClick?: (row: T) => void;
+  enableRubberBand?: boolean;
 }
 
+/**
+ * Rule 3: Stagger list rows by 30ms (student list, payment list rows stagger by 30ms)
+ * Rule 9: Ease-in-out for moves
+ * Rule 19: Rubber band past bounds
+ */
 export function DataTable<T extends Record<string, any>>({
   data,
   columns,
@@ -33,6 +53,8 @@ export function DataTable<T extends Record<string, any>>({
   emptyTitle = "No records found",
   emptySubtitle = "There are no matching entries to display in this view.",
   defaultPageSize = 10,
+  onRowClick,
+  enableRubberBand = false,
 }: DataTableProps<T>) {
   const [sortKey, setSortKey] = useState<string | null>(null);
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
@@ -90,7 +112,8 @@ export function DataTable<T extends Record<string, any>>({
     }
   };
 
-  const handleSelectRow = (id: string) => {
+  const handleSelectRow = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
     if (!onSelectionChange) return;
     if (selectedIds.includes(id)) {
       onSelectionChange(selectedIds.filter((item) => item !== id));
@@ -99,23 +122,37 @@ export function DataTable<T extends Record<string, any>>({
     }
   };
 
-  const allPageSelected =
-    paginatedData.length > 0 && paginatedData.every((row) => selectedIds.includes(keyExtractor(row)));
+  const allOnPageSelected =
+    paginatedData.length > 0 &&
+    paginatedData.every((item) => selectedIds.includes(keyExtractor(item)));
+
+  const someOnPageSelected =
+    paginatedData.some((item) => selectedIds.includes(keyExtractor(item))) &&
+    !allOnPageSelected;
 
   return (
-    <div className="w-full bg-white border border-slate-200 rounded-xl overflow-hidden shadow-xs">
+    <div className="w-full bg-white border border-slate-200 rounded-xl overflow-hidden shadow-xs flex flex-col justify-between">
+      {/* Table Wrapper with optional Rubber Band scroll (Rule 19) */}
       <div className="overflow-x-auto">
-        <table className="w-full text-left text-xs border-collapse">
+        <motion.table
+          drag={enableRubberBand ? "y" : false}
+          dragConstraints={{ top: 0, bottom: 0 }}
+          dragElastic={0.08} // Rule 19: Rubber band past bounds
+          className="w-full text-left text-xs border-collapse"
+        >
           <thead>
-            <tr className="bg-slate-50/80 border-b border-slate-200 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">
+            <tr className="bg-slate-50/80 border-b border-slate-200 text-slate-600 font-semibold uppercase text-[11px] tracking-wider select-none">
               {selectable && (
                 <th className="w-10 px-4 py-3 text-center">
                   <input
                     type="checkbox"
-                    checked={allPageSelected}
+                    checked={allOnPageSelected}
+                    ref={(input) => {
+                      if (input) input.indeterminate = someOnPageSelected;
+                    }}
                     onChange={handleSelectAll}
-                    className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500"
-                    aria-label="Select all rows"
+                    className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 border-slate-300"
+                    aria-label="Select all on this page"
                   />
                 </th>
               )}
@@ -124,7 +161,7 @@ export function DataTable<T extends Record<string, any>>({
                 return (
                   <th
                     key={col.key}
-                    className={`px-4 py-3 whitespace-nowrap ${col.className || ""}`}
+                    className={`px-4 py-3 font-semibold ${col.className || ""}`}
                   >
                     {col.sortable ? (
                       <button
@@ -151,7 +188,14 @@ export function DataTable<T extends Record<string, any>>({
               })}
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100">
+
+          {/* Rule 3: Stagger list rows by 30ms */}
+          <motion.tbody
+            variants={staggerListVariants}
+            initial="hidden"
+            animate="visible"
+            className="divide-y divide-slate-100"
+          >
             {paginatedData.length === 0 ? (
               <tr>
                 <td
@@ -166,19 +210,25 @@ export function DataTable<T extends Record<string, any>>({
               paginatedData.map((row, idx) => {
                 const id = keyExtractor(row);
                 const isSelected = selectedIds.includes(id);
+
                 return (
-                  <tr
+                  <motion.tr
                     key={id}
+                    variants={staggerRowVariants}
+                    layout // Rule 9: Ease-in-out for layout moves
+                    transition={{ layout: { ease: EASE_IN_OUT, duration: 0.22 } }}
+                    onClick={() => onRowClick && onRowClick(row)}
                     className={`transition-colors hover:bg-slate-50/70 ${
                       isSelected ? "bg-blue-50/30" : ""
-                    }`}
+                    } ${onRowClick ? "cursor-pointer" : ""}`}
                   >
                     {selectable && (
                       <td className="w-10 px-4 py-3 text-center">
                         <input
                           type="checkbox"
                           checked={isSelected}
-                          onChange={() => handleSelectRow(id)}
+                          onChange={(e) => handleSelectRow(id, e as any)}
+                          onClick={(e) => e.stopPropagation()}
                           className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500"
                           aria-label={`Select row ${id}`}
                         />
@@ -194,12 +244,12 @@ export function DataTable<T extends Record<string, any>>({
                         {col.render ? col.render(row, idx) : row[col.key]}
                       </td>
                     ))}
-                  </tr>
+                  </motion.tr>
                 );
               })
             )}
-          </tbody>
-        </table>
+          </motion.tbody>
+        </motion.table>
       </div>
 
       {/* Pagination Footer */}
@@ -218,42 +268,36 @@ export function DataTable<T extends Record<string, any>>({
               <option value={5}>5</option>
               <option value={10}>10</option>
               <option value={20}>20</option>
-              <option value={50}>50</option>
             </select>
-            <span>
-              entries • Showing{" "}
-              <strong className="text-slate-800 tabular-nums">
-                {(currentPage - 1) * pageSize + 1}
-              </strong>{" "}
-              to{" "}
-              <strong className="text-slate-800 tabular-nums">
-                {Math.min(currentPage * pageSize, sortedData.length)}
-              </strong>{" "}
-              of <strong className="text-slate-800 tabular-nums">{sortedData.length}</strong>
+            <span>entries</span>
+            <span className="text-slate-400">|</span>
+            <span className="tabular-nums">
+              Showing {(currentPage - 1) * pageSize + 1} to{" "}
+              {Math.min(currentPage * pageSize, sortedData.length)} of {sortedData.length} records
             </span>
           </div>
 
           <div className="flex items-center gap-1.5">
             <button
               type="button"
-              disabled={currentPage <= 1}
+              disabled={currentPage === 1}
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-              className="p-1.5 rounded border border-slate-200 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-              aria-label="Previous page"
+              className="p-1.5 rounded border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed"
+              title="Previous Page"
             >
-              <ChevronLeft className="w-4 h-4" />
+              <ChevronLeft className="w-3.5 h-3.5" />
             </button>
-            <span className="px-2 text-xs font-semibold text-slate-800 tabular-nums">
+            <span className="px-2 font-medium text-slate-700 tabular-nums">
               Page {currentPage} of {totalPages}
             </span>
             <button
               type="button"
-              disabled={currentPage >= totalPages}
+              disabled={currentPage === totalPages}
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-              className="p-1.5 rounded border border-slate-200 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-              aria-label="Next page"
+              className="p-1.5 rounded border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed"
+              title="Next Page"
             >
-              <ChevronRight className="w-4 h-4" />
+              <ChevronRight className="w-3.5 h-3.5" />
             </button>
           </div>
         </div>

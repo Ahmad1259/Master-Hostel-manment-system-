@@ -1,11 +1,15 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useApp } from "../../../lib/store";
 import { FeeInvoiceItem } from "../../../lib/mock-data";
 import { formatCurrency, formatDate } from "../../../lib/utils";
 import { DataTable, Column } from "../../../components/ui/data-table";
 import { DestructiveConfirmModal } from "../../../components/ui/destructive-modal";
+import { PulseSuccessModal } from "../../../components/motion/pulse-success-modal";
+import { MotionButton } from "../../../components/motion/motion-button";
+import { pageEntranceVariants } from "../../../lib/motion";
 import {
   Receipt,
   Search,
@@ -47,6 +51,14 @@ export default function FeesPage() {
 
   // Destructive Delete Modal
   const [invoiceToDelete, setInvoiceToDelete] = useState<FeeInvoiceItem | null>(null);
+
+  // Rule 8: Pulse to confirm success state
+  const [pulseSuccessData, setPulseSuccessData] = useState<{
+    title: string;
+    subtitle: string;
+    amount?: number;
+    ref?: string;
+  } | null>(null);
 
   // Generate Invoices Modal
   const [showGenModal, setShowGenModal] = useState(false);
@@ -91,9 +103,18 @@ export default function FeesPage() {
   const handleConfirmPayment = (e: React.FormEvent) => {
     e.preventDefault();
     if (!paymentTargetInvoice || paymentAmount <= 0) return;
-    recordFeePayment(paymentTargetInvoice.id, paymentAmount, bankReceiptRef);
+    const inv = paymentTargetInvoice;
+    recordFeePayment(inv.id, paymentAmount, bankReceiptRef);
+    
+    // Rule 8: Pulse to confirm success!
+    setPulseSuccessData({
+      title: "Fee Payment Recorded",
+      subtitle: `Dues settled for ${inv.studentName} (Room ${inv.roomNumber}). Official receipt generated.`,
+      amount: paymentAmount,
+      ref: bankReceiptRef,
+    });
+
     setPaymentTargetInvoice(null);
-    showToast(`Payment of Rs ${paymentAmount.toLocaleString()} recorded.`, "success");
   };
 
   // Reusable Table Columns (UX Pattern #11)
@@ -219,7 +240,12 @@ export default function FeesPage() {
   ];
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-150">
+    <motion.div
+      variants={pageEntranceVariants}
+      initial="hidden"
+      animate="visible"
+      className="space-y-6"
+    >
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-200">
         <div>
@@ -234,14 +260,15 @@ export default function FeesPage() {
           </p>
         </div>
 
-        <button
-          type="button"
+        <MotionButton
+          variant="primary"
+          size="md"
           onClick={() => setShowGenModal(true)}
-          className="inline-flex items-center gap-1.5 px-4 py-2.5 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-xs transition-colors self-start sm:self-auto"
+          className="self-start sm:self-auto"
         >
           <Receipt className="w-4 h-4" />
           <span>Generate Monthly Invoices</span>
-        </button>
+        </MotionButton>
       </div>
 
       {/* 3 Top Financial KPI Cards */}
@@ -629,6 +656,18 @@ export default function FeesPage() {
         itemName={invoiceToDelete ? `Invoice for ${invoiceToDelete.studentName} (${invoiceToDelete.month} ${invoiceToDelete.year} - Rs ${invoiceToDelete.totalDue})` : undefined}
         confirmButtonText="Delete Invoice"
       />
-    </div>
+
+      {/* Rule 8: Pulse to Confirm Success Tick */}
+      {pulseSuccessData && (
+        <PulseSuccessModal
+          isOpen={!!pulseSuccessData}
+          onClose={() => setPulseSuccessData(null)}
+          title={pulseSuccessData.title}
+          subtitle={pulseSuccessData.subtitle}
+          amount={pulseSuccessData.amount}
+          referenceNumber={pulseSuccessData.ref}
+        />
+      )}
+    </motion.div>
   );
 }

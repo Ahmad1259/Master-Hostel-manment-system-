@@ -1,0 +1,51 @@
+"use client";
+
+import React from "react";
+import { motion, HTMLMotionProps } from "framer-motion";
+import { buttonPressProps } from "../../lib/motion";
+
+interface MotionButtonProps extends HTMLMotionProps<"button"> {
+  variant?: "primary" | "secondary" | "danger" | "ghost" | "outline";
+  size?: "sm" | "md" | "lg";
+  children: React.ReactNode;
+}
+
+/**
+ * Rule 4: Scale to 0.97 on press
+ * Rule 13: No bounce on everyday UI
+ * Rule 14: Don't tween while held
+ */
+export function MotionButton({
+  variant = "primary",
+  size = "md",
+  className = "",
+  children,
+  ...props
+}: MotionButtonProps) {
+  const baseStyles =
+    "inline-flex items-center justify-center font-semibold rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-1 select-none disabled:opacity-50 disabled:cursor-not-allowed";
+
+  const sizeStyles = {
+    sm: "text-xs px-3 py-1.5 gap-1.5 shadow-2xs",
+    md: "text-xs sm:text-sm px-4 py-2.5 gap-2 shadow-xs",
+    lg: "text-sm sm:text-base px-5 py-3 gap-2.5 shadow-sm",
+  };
+
+  const variantStyles = {
+    primary: "bg-blue-600 hover:bg-blue-700 text-white",
+    secondary: "bg-slate-900 hover:bg-slate-800 text-white",
+    outline: "bg-white hover:bg-slate-50 text-slate-700 border border-slate-300",
+    danger: "bg-red-600 hover:bg-red-700 text-white",
+    ghost: "bg-transparent hover:bg-slate-100 text-slate-700",
+  };
+
+  return (
+    <motion.button
+      {...buttonPressProps}
+      className={`${baseStyles} ${sizeStyles[size]} ${variantStyles[variant]} ${className}`}
+      {...props}
+    >
+      {children}
+    </motion.button>
+  );
+}

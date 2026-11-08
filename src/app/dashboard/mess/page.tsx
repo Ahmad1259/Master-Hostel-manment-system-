@@ -1,9 +1,18 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
+import { motion } from "framer-motion";
 import { useApp } from "../../../lib/store";
 import { formatCurrency } from "../../../lib/utils";
 import { StudentItem } from "../../../lib/mock-data";
+import { MotionToggle } from "../../../components/motion/motion-toggle";
+import { MotionButton } from "../../../components/motion/motion-button";
+import {
+  pageEntranceVariants,
+  staggerListVariants,
+  staggerRowVariants,
+  EASE_IN_OUT,
+} from "../../../lib/motion";
 import {
   Utensils,
   Search,
@@ -73,7 +82,12 @@ export default function MessPage() {
   };
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-150">
+    <motion.div
+      variants={pageEntranceVariants}
+      initial="hidden"
+      animate="visible"
+      className="space-y-6"
+    >
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-200">
         <div>
@@ -201,7 +215,12 @@ export default function MessPage() {
                 <th className="px-4 py-3 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <motion.tbody
+              variants={staggerListVariants}
+              initial="hidden"
+              animate="visible"
+              className="divide-y divide-slate-100"
+            >
               {filteredStudents.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="py-12 px-4 text-center text-slate-500">
@@ -221,7 +240,13 @@ export default function MessPage() {
                 filteredStudents.map((student) => {
                   const isMessOn = student.messStatus !== "OFF";
                   return (
-                    <tr key={student.id} className="hover:bg-slate-50/60 transition-colors">
+                    <motion.tr
+                      key={student.id}
+                      variants={staggerRowVariants}
+                      layout
+                      transition={{ layout: { ease: EASE_IN_OUT, duration: 0.22 } }}
+                      className="hover:bg-slate-50/60 transition-colors"
+                    >
                       <td className="px-4 py-3 font-semibold text-slate-900">
                         {student.name}
                       </td>
@@ -243,19 +268,16 @@ export default function MessPage() {
                           {isMessOn ? "MESS ON" : "MESS OFF"}
                         </span>
                       </td>
-                      {/* Optimistic UI Toggle (UX Pattern #1) */}
+                      {/* Rule 5: Motion Toggle with 12% moving knob stretch */}
                       <td className="px-4 py-3 text-center">
-                        <button
-                          type="button"
-                          onClick={() => toggleMessStatus(student.id)}
-                          className={`px-3 py-1 rounded-full text-[11px] font-bold transition-all shadow-2xs ${
-                            isMessOn
-                              ? "bg-emerald-600 hover:bg-emerald-700 text-white"
-                              : "bg-slate-200 hover:bg-slate-300 text-slate-800"
-                          }`}
-                        >
-                          {isMessOn ? "Active (Turn Off)" : "Inactive (Turn On)"}
-                        </button>
+                        <div className="flex justify-center">
+                          <MotionToggle
+                            checked={isMessOn}
+                            onChange={() => toggleMessStatus(student.id)}
+                            activeLabel="ON"
+                            inactiveLabel="OFF"
+                          />
+                        </div>
                       </td>
                       <td className="px-4 py-3 text-right">
                         <button
@@ -267,11 +289,11 @@ export default function MessPage() {
                           <Edit2 className="w-3.5 h-3.5" />
                         </button>
                       </td>
-                    </tr>
+                    </motion.tr>
                   );
                 })
               )}
-            </tbody>
+            </motion.tbody>
           </table>
         </div>
       </div>
@@ -329,6 +351,6 @@ export default function MessPage() {
           </div>
         </div>
       )}
-    </div>
+    </motion.div>
   );
 }

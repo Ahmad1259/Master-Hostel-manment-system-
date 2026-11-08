@@ -1,10 +1,13 @@
 "use client";
 
 import React, { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useApp } from "../../../lib/store";
 import { formatCurrency } from "../../../lib/utils";
 import { useThrottle } from "../../../hooks/use-throttle";
 import { LockedFeatureBadge } from "../../../components/ui/tier-badge";
+import { MotionButton } from "../../../components/motion/motion-button";
+import { pageEntranceVariants, tabContentVariants } from "../../../lib/motion";
 import hostelConfig from "../../../../hostel.config";
 import {
   PieChart,
@@ -79,7 +82,12 @@ export default function ReportsPage() {
   }, 1000);
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-150">
+    <motion.div
+      variants={pageEntranceVariants}
+      initial="hidden"
+      animate="visible"
+      className="space-y-6"
+    >
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-200">
         <div>
@@ -96,22 +104,22 @@ export default function ReportsPage() {
 
         {/* Throttled Export Buttons (UX Pattern #8) */}
         <div className="flex items-center gap-2">
-          <button
-            type="button"
+          <MotionButton
+            variant="outline"
+            size="sm"
             onClick={handleExportCSV}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 rounded-lg shadow-xs transition-colors"
           >
             <Download className="w-3.5 h-3.5 text-slate-500" />
             <span>Export CSV</span>
-          </button>
-          <button
-            type="button"
+          </MotionButton>
+          <MotionButton
+            variant="secondary"
+            size="sm"
             onClick={() => window.print()}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 rounded-lg shadow-xs transition-colors"
           >
             <Printer className="w-3.5 h-3.5" />
             <span>Print Report</span>
-          </button>
+          </MotionButton>
         </div>
       </div>
 
@@ -141,9 +149,17 @@ export default function ReportsPage() {
         </button>
       </div>
 
-      {/* Tab 1: Collection Report */}
-      {activeTab === "collection" && (
-        <div className="space-y-6">
+      {/* Rule 16: Overlap old & new states when switching tabs (mode="popLayout") */}
+      <AnimatePresence mode="popLayout">
+        {activeTab === "collection" ? (
+          <motion.div
+            key="tab-collection"
+            variants={tabContentVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            className="space-y-6"
+          >
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs">
               <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide block">
@@ -224,12 +240,16 @@ export default function ReportsPage() {
               </table>
             </div>
           </div>
-        </div>
-      )}
-
-      {/* Tab 2: Occupancy Report */}
-      {activeTab === "occupancy" && (
-        <div className="space-y-6">
+        </motion.div>
+      ) : (
+        <motion.div
+          key="tab-occupancy"
+          variants={tabContentVariants}
+          initial="hidden"
+          animate="visible"
+          exit="exit"
+          className="space-y-6"
+        >
           <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
             <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs">
               <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide block">
@@ -320,8 +340,9 @@ export default function ReportsPage() {
               </table>
             </div>
           </div>
-        </div>
+        </motion.div>
       )}
+      </AnimatePresence>
 
       {/* Tier-Based Locked Feature Section (UX Pattern #14) */}
       <div className="bg-slate-100/60 border border-slate-200 rounded-xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -350,6 +371,6 @@ export default function ReportsPage() {
           Unlock on Standard+
         </button>
       </div>
-    </div>
+    </motion.div>
   );
 }

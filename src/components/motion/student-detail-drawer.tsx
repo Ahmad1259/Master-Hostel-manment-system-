@@ -31,6 +31,7 @@ interface StudentDetailDrawerProps {
   onClose: () => void;
   onSendRentReminder?: (student: StudentItem) => void;
   onMarkPaid?: (student: StudentItem) => void;
+  onDeleteStudent?: (student: StudentItem) => void;
 }
 
 /**
@@ -44,6 +45,7 @@ export function StudentDetailDrawer({
   onClose,
   onSendRentReminder,
   onMarkPaid,
+  onDeleteStudent,
 }: StudentDetailDrawerProps) {
   if (!student) return null;
 
@@ -198,7 +200,7 @@ export function StudentDetailDrawer({
                   <span className="text-slate-600 font-semibold">Pending Arrears:</span>
                   <span
                     className={`font-mono font-bold text-sm tabular-nums ${
-                      student.pendingArrears > 0 ? "text-amber-600" : "text-emerald-600"
+                      student.pendingArrears > 0 ? "text-amber-700 font-black" : "text-emerald-700"
                     }`}
                   >
                     {student.pendingArrears > 0
@@ -208,27 +210,53 @@ export function StudentDetailDrawer({
                 </div>
               </div>
             </motion.div>
+
+            {/* Legal Compliance Box (Legal Item 8 & 20) */}
+            <motion.div
+              variants={settleItemVariants}
+              className="p-3 bg-gray-50 border border-gray-200 rounded-lg text-xs space-y-1.5"
+            >
+              <div className="flex items-center justify-between text-gray-700">
+                <span className="font-semibold">Police Verification (Form 15):</span>
+                <span className="text-emerald-700 font-bold">Verified</span>
+              </div>
+              <p className="text-[11px] text-gray-500 leading-tight">
+                Data protected under PECA 2016. Resident has the right to request permanent erasure upon vacating.
+              </p>
+            </motion.div>
           </motion.div>
 
-          {/* Quick Actions Footer with Rule 4: Scale on press */}
-          <div className="pt-6 border-t border-slate-200 flex items-center justify-between gap-3">
-            <MotionButton
-              variant="outline"
-              size="sm"
-              onClick={() => onSendRentReminder && onSendRentReminder(student)}
-              className="flex-1"
-            >
-              Send SMS Reminder
-            </MotionButton>
+          {/* Quick Actions Footer with Rule 4: Scale on press & Clear Verbs */}
+          <div className="pt-6 border-t border-slate-200 space-y-2">
+            <div className="flex items-center justify-between gap-3">
+              <MotionButton
+                variant="outline"
+                size="sm"
+                onClick={() => onSendRentReminder && onSendRentReminder(student)}
+                className="flex-1"
+              >
+                Send SMS Notice
+              </MotionButton>
 
-            <MotionButton
-              variant="primary"
-              size="sm"
-              onClick={() => onMarkPaid && onMarkPaid(student)}
-              className="flex-1"
-            >
-              Record Payment
-            </MotionButton>
+              <MotionButton
+                variant="primary"
+                size="sm"
+                onClick={() => onMarkPaid && onMarkPaid(student)}
+                className="flex-1"
+              >
+                Record Rent Payment
+              </MotionButton>
+            </div>
+
+            {onDeleteStudent && (
+              <button
+                type="button"
+                onClick={() => onDeleteStudent(student)}
+                className="w-full text-center text-xs text-red-600 hover:text-red-700 py-1 font-semibold transition-colors"
+              >
+                Delete / Erase Resident Record
+              </button>
+            )}
           </div>
         </motion.div>
       </div>

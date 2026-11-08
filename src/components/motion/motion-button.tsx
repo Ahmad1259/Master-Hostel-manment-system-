@@ -32,11 +32,11 @@ export function MotionButton({
   };
 
   const variantStyles = {
-    primary: "bg-blue-600 hover:bg-blue-700 text-white",
-    secondary: "bg-slate-900 hover:bg-slate-800 text-white",
-    outline: "bg-white hover:bg-slate-50 text-slate-700 border border-slate-300",
-    danger: "bg-red-600 hover:bg-red-700 text-white",
-    ghost: "bg-transparent hover:bg-slate-100 text-slate-700",
+    primary: "bg-emerald-700 hover:bg-emerald-800 text-white shadow-xs",
+    secondary: "bg-gray-900 hover:bg-gray-800 text-white shadow-xs",
+    outline: "bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 shadow-2xs",
+    danger: "bg-red-600 hover:bg-red-700 text-white shadow-xs",
+    ghost: "bg-transparent hover:bg-gray-100 text-gray-700",
   };
 
   return (

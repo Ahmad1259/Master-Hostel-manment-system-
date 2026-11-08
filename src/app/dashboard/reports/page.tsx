@@ -91,7 +91,7 @@ export default function ReportsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-200">
         <div>
-          <span className="text-xs font-semibold text-blue-600 uppercase tracking-wide">
+          <span className="text-xs font-semibold text-emerald-800 uppercase tracking-wide">
             Executive Analytics &amp; Compliance
           </span>
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 mt-1">
@@ -130,7 +130,7 @@ export default function ReportsPage() {
           onClick={() => setActiveTab("collection")}
           className={`px-4 py-2 rounded-lg text-xs font-bold transition-colors ${
             activeTab === "collection"
-              ? "bg-blue-600 text-white shadow-xs"
+              ? "bg-emerald-700 text-white shadow-xs"
               : "text-slate-600 hover:bg-slate-100"
           }`}
         >
@@ -141,7 +141,7 @@ export default function ReportsPage() {
           onClick={() => setActiveTab("occupancy")}
           className={`px-4 py-2 rounded-lg text-xs font-bold transition-colors ${
             activeTab === "occupancy"
-              ? "bg-blue-600 text-white shadow-xs"
+              ? "bg-emerald-700 text-white shadow-xs"
               : "text-slate-600 hover:bg-slate-100"
           }`}
         >

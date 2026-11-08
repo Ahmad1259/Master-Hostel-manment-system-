@@ -68,6 +68,7 @@ export default function StudentsPage() {
   const [editingStudent, setEditingStudent] = useState<StudentItem | null>(null);
   const [studentToDelete, setStudentToDelete] = useState<StudentItem | null>(null);
   const [inspectingStudent, setInspectingStudent] = useState<StudentItem | null>(null);
+  const [consentGiven, setConsentGiven] = useState(false); // Legal Item 6: Statutory Data Consent Checkbox
 
   // New Student Form State with Smart Validation (UX Pattern #9)
   const [newStudent, setNewStudent] = useState({
@@ -133,6 +134,10 @@ export default function StudentsPage() {
   // Handle Add Student Submit
   const handleAddSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!consentGiven) {
+      showToast("Please agree to the statutory tenant verification data terms.", "warning");
+      return;
+    }
     if (!newStudent.name || !isCnicValid || !isPhoneValid || !isRentValid) {
       showToast("Please fill all required fields correctly.", "warning");
       return;
@@ -140,6 +145,7 @@ export default function StudentsPage() {
 
     addStudent(newStudent);
     setShowAddModal(false);
+    setConsentGiven(false);
     setNewStudent({
       name: "",
       fatherName: "",
@@ -614,6 +620,22 @@ export default function StudentsPage() {
                 </div>
               </div>
 
+              {/* Statutory Data Sharing Consent Box (Legal Item 6) */}
+              <div className="p-3 bg-emerald-50/50 border border-emerald-100 rounded-lg">
+                <label className="flex items-start gap-2.5 text-xs text-gray-700 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    required
+                    checked={consentGiven}
+                    onChange={(e) => setConsentGiven(e.target.checked)}
+                    className="mt-0.5 rounded border-gray-300 text-emerald-700 focus:ring-emerald-600"
+                  />
+                  <span>
+                    I agree to share my CNIC, mobile number, and tenancy information for hostel admission, emergency contact records, and mandatory Punjab Police Form 15 verification under the Temporary Residents Act 2015.
+                  </span>
+                </label>
+              </div>
+
               <div className="flex items-center justify-end gap-2.5 pt-4 border-t border-slate-100">
                 <button
                   type="button"
@@ -624,8 +646,8 @@ export default function StudentsPage() {
                 </button>
                 <button
                   type="submit"
-                  disabled={!isCnicValid || !isPhoneValid || !isRentValid}
-                  className="px-5 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg shadow-xs"
+                  disabled={!isCnicValid || !isPhoneValid || !isRentValid || !consentGiven}
+                  className="px-5 py-2 text-xs font-semibold text-white bg-emerald-700 hover:bg-emerald-800 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg shadow-xs transition-colors"
                 >
                   Enroll Resident
                 </button>
@@ -755,6 +777,10 @@ export default function StudentsPage() {
         onMarkPaid={(s) => {
           bulkMarkPaid([s.id]);
           setInspectingStudent(null);
+        }}
+        onDeleteStudent={(s) => {
+          setInspectingStudent(null);
+          setStudentToDelete(s);
         }}
       />
     </motion.div>

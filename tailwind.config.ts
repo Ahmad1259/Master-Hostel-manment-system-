@@ -7,12 +7,13 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // ONE accent color: Blue (#2563EB)
+        // ONE dominant accent color: Deep Emerald Green (#059669) - Rule 11
         accent: {
-          DEFAULT: "#2563EB",
-          hover: "#1D4ED8",
-          subtle: "#EFF6FF",
-          border: "#BFDBFE",
+          DEFAULT: "#059669",
+          hover: "#047857",
+          subtle: "#ECFDF5",
+          border: "#A7F3D0",
+          dark: "#064E3B",
         },
       },
       fontFamily: {

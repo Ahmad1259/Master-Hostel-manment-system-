@@ -14,12 +14,14 @@ interface CleanBookingFormProps {
 export function CleanBookingForm({ initialRoom, initialBed }: CleanBookingFormProps) {
   const [formData, setFormData] = useState({
     fullName: "",
+    cnic: "",
     phone: "",
     email: "",
     institution: "",
     moveInDate: "",
     roomPreference: initialRoom ? `${initialRoom.type} (Room ${initialRoom.roomNumber})` : "DOUBLE",
     notes: "",
+    consentGiven: false,
     honeypot: "",
   });
 
@@ -93,16 +95,18 @@ export function CleanBookingForm({ initialRoom, initialBed }: CleanBookingFormPr
                 setIsSuccess(false);
                 setFormData({
                   fullName: "",
+                  cnic: "",
                   phone: "",
                   email: "",
                   institution: "",
                   moveInDate: "",
                   roomPreference: "DOUBLE",
                   notes: "",
+                  consentGiven: false,
                   honeypot: "",
                 });
               }}
-              className="text-xs font-semibold text-blue-600 hover:text-blue-700 underline"
+              className="text-xs font-semibold text-emerald-700 hover:text-emerald-800 underline"
             >
               Submit Another Reservation
             </button>
@@ -120,7 +124,7 @@ export function CleanBookingForm({ initialRoom, initialBed }: CleanBookingFormPr
               autoComplete="off"
             />
 
-            {/* Row 1: Name and Phone */}
+            {/* Row 1: Name and CNIC */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1.5">
@@ -129,13 +133,30 @@ export function CleanBookingForm({ initialRoom, initialBed }: CleanBookingFormPr
                 <input
                   type="text"
                   required
-                  placeholder="e.g. Ibrahim Qureshi"
+                  placeholder="e.g. Ali Raza"
                   value={formData.fullName}
                   onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                  className="w-full text-sm bg-slate-50 border border-slate-300 rounded-lg px-3.5 py-2.5 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white"
+                  className="w-full text-sm bg-slate-50 border border-slate-300 rounded-lg px-3.5 py-2.5 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:bg-white"
                 />
               </div>
 
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                  CNIC / B-Form Number *
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="35201-1234567-1"
+                  value={formData.cnic}
+                  onChange={(e) => setFormData({ ...formData, cnic: e.target.value })}
+                  className="w-full text-sm bg-slate-50 border border-slate-300 rounded-lg px-3.5 py-2.5 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:bg-white font-mono"
+                />
+              </div>
+            </div>
+
+            {/* Row 2: Phone and Email */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                   Mobile / WhatsApp Number *
@@ -143,16 +164,13 @@ export function CleanBookingForm({ initialRoom, initialBed }: CleanBookingFormPr
                 <input
                   type="tel"
                   required
-                  placeholder="+92 300 1234567"
+                  placeholder="0300-1234567"
                   value={formData.phone}
                   onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  className="w-full text-sm bg-slate-50 border border-slate-300 rounded-lg px-3.5 py-2.5 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white"
+                  className="w-full text-sm bg-slate-50 border border-slate-300 rounded-lg px-3.5 py-2.5 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:bg-white font-mono"
                 />
               </div>
-            </div>
 
-            {/* Row 2: Email and Institution */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                   Email Address
@@ -162,10 +180,13 @@ export function CleanBookingForm({ initialRoom, initialBed }: CleanBookingFormPr
                   placeholder="student@university.edu.pk"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full text-sm bg-slate-50 border border-slate-300 rounded-lg px-3.5 py-2.5 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white"
+                  className="w-full text-sm bg-slate-50 border border-slate-300 rounded-lg px-3.5 py-2.5 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:bg-white"
                 />
               </div>
+            </div>
 
+            {/* Row 3: Institution and Room Preference */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                   University / College / Employer *
@@ -176,13 +197,10 @@ export function CleanBookingForm({ initialRoom, initialBed }: CleanBookingFormPr
                   placeholder="e.g. LUMS, FAST, FC College"
                   value={formData.institution}
                   onChange={(e) => setFormData({ ...formData, institution: e.target.value })}
-                  className="w-full text-sm bg-slate-50 border border-slate-300 rounded-lg px-3.5 py-2.5 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white"
+                  className="w-full text-sm bg-slate-50 border border-slate-300 rounded-lg px-3.5 py-2.5 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:bg-white"
                 />
               </div>
-            </div>
 
-            {/* Row 3: Room Type and Date */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                   Room Category *
@@ -190,7 +208,7 @@ export function CleanBookingForm({ initialRoom, initialBed }: CleanBookingFormPr
                 <select
                   value={formData.roomPreference}
                   onChange={(e) => setFormData({ ...formData, roomPreference: e.target.value })}
-                  className="w-full text-sm bg-slate-50 border border-slate-300 rounded-lg px-3.5 py-2.5 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white font-medium"
+                  className="w-full text-sm bg-slate-50 border border-slate-300 rounded-lg px-3.5 py-2.5 text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:bg-white font-medium"
                 >
                   <option value="SINGLE">Executive Single Suite (Private Ensuite) — Rs 45,000/mo</option>
                   <option value="DOUBLE">Premium Double Chamber (Twin Desks) — Rs 32,000/mo</option>
@@ -198,7 +216,10 @@ export function CleanBookingForm({ initialRoom, initialBed }: CleanBookingFormPr
                   <option value="DORMITORY">4-Bed Dormitory — Rs 22,000/mo</option>
                 </select>
               </div>
+            </div>
 
+            {/* Row 4: Move-in Date and Notes */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                   Planned Move-in Date *
@@ -208,40 +229,55 @@ export function CleanBookingForm({ initialRoom, initialBed }: CleanBookingFormPr
                   required
                   value={formData.moveInDate}
                   onChange={(e) => setFormData({ ...formData, moveInDate: e.target.value })}
-                  className="w-full text-sm bg-slate-50 border border-slate-300 rounded-lg px-3.5 py-2.5 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white font-mono"
+                  className="w-full text-sm bg-slate-50 border border-slate-300 rounded-lg px-3.5 py-2.5 text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:bg-white font-mono"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                  Special Requests / Dietary
+                </label>
+                <input
+                  type="text"
+                  placeholder="Parking, meal timings, etc."
+                  value={formData.notes}
+                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                  className="w-full text-sm bg-slate-50 border border-slate-300 rounded-lg px-3.5 py-2.5 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:bg-white"
                 />
               </div>
             </div>
 
-            {/* Notes */}
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                Special Requests or Dietary Requirements
+            {/* Statutory Legal Consent Box (Legal Item 6) */}
+            <div className="p-3.5 bg-emerald-50/60 border border-emerald-100 rounded-lg">
+              <label className="flex items-start gap-2.5 text-xs text-slate-700 cursor-pointer">
+                <input
+                  type="checkbox"
+                  required
+                  checked={formData.consentGiven}
+                  onChange={(e) => setFormData({ ...formData, consentGiven: e.target.checked })}
+                  className="mt-0.5 rounded border-slate-300 text-emerald-700 focus:ring-emerald-600"
+                />
+                <span>
+                  I agree to share my CNIC, mobile number, and tenancy details for hostel admission, emergency records, and mandatory Punjab Police Form 15 verification under the Temporary Residents Act 2015.
+                </span>
               </label>
-              <textarea
-                rows={3}
-                placeholder="Vehicle parking, study carrel preferences, or special dietary considerations..."
-                value={formData.notes}
-                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                className="w-full text-sm bg-slate-50 border border-slate-300 rounded-lg px-3.5 py-2.5 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white"
-              />
             </div>
 
             {/* Submit CTA */}
             <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-4">
               <span className="text-xs text-slate-500">
-                Zero booking fee. Pay challan upon move-in confirmation.
+                Zero advance booking fee. Pay challan upon move-in confirmation.
               </span>
 
               <button
                 type="submit"
-                disabled={isLoading}
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-semibold text-sm px-7 py-3 rounded-lg shadow-xs transition-colors"
+                disabled={isLoading || !formData.consentGiven}
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-emerald-700 hover:bg-emerald-800 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold text-sm px-7 py-3 rounded-lg shadow-xs transition-colors"
               >
                 {isLoading ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>Transmitting Dossier...</span>
+                    <span>Transmitting Application...</span>
                   </>
                 ) : (
                   <>

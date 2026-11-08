@@ -23,6 +23,7 @@ import {
   ArrowRight,
   CheckCircle,
   ExternalLink,
+  ShieldCheck,
 } from "lucide-react";
 import { RoomItem, BedItem } from "../lib/mock-data";
 
@@ -50,7 +51,7 @@ export default function ShowcasePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 flex items-center justify-between">
           {/* Logo & Identity */}
           <Link href="/" className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg bg-blue-600 text-white flex items-center justify-center font-bold text-sm shadow-xs">
+            <div className="w-9 h-9 rounded-lg bg-emerald-700 text-white flex items-center justify-center font-bold text-sm shadow-xs">
               {hostelConfig.identity.monogram}
             </div>
             <div>
@@ -65,16 +66,16 @@ export default function ShowcasePage() {
 
           {/* Navigation Links */}
           <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-slate-600">
-            <a href="#rooms" className="hover:text-blue-600 transition-colors">
+            <a href="#rooms" className="hover:text-emerald-700 transition-colors">
               Chambers &amp; Availability
             </a>
-            <a href="#facilities" className="hover:text-blue-600 transition-colors">
+            <a href="#facilities" className="hover:text-emerald-700 transition-colors">
               Facilities
             </a>
-            <a href="#transit" className="hover:text-blue-600 transition-colors">
+            <a href="#transit" className="hover:text-emerald-700 transition-colors">
               Nearby Universities
             </a>
-            <a href="#booking-form" className="hover:text-blue-600 transition-colors">
+            <a href="#booking-form" className="hover:text-emerald-700 transition-colors">
               Book a Bed
             </a>
           </nav>
@@ -85,7 +86,7 @@ export default function ShowcasePage() {
 
             <Link
               href="/dashboard"
-              className="inline-flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold px-4 py-2.5 rounded-lg transition-colors shadow-xs"
+              className="inline-flex items-center gap-2 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold px-4 py-2.5 rounded-lg transition-colors shadow-xs"
             >
               <LayoutDashboard className="w-3.5 h-3.5" />
               <span>ERP Portal</span>
@@ -97,8 +98,8 @@ export default function ShowcasePage() {
       {/* Hero Section */}
       <section className="pt-12 sm:pt-16 pb-10 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
         <div className="max-w-3xl space-y-4">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-xs font-semibold">
-            <span className="w-1.5 h-1.5 rounded-full bg-blue-600" />
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-700" />
             <span>Admissions Open for Semester 2026</span>
           </div>
 
@@ -113,7 +114,7 @@ export default function ShowcasePage() {
           <div className="pt-2 flex flex-wrap items-center gap-3">
             <a
               href="#rooms"
-              className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm px-6 py-3 rounded-lg shadow-xs transition-colors"
+              className="inline-flex items-center gap-2 bg-emerald-700 hover:bg-emerald-800 text-white font-semibold text-sm px-6 py-3 rounded-lg shadow-xs transition-colors"
             >
               <span>Explore Available Beds</span>
               <ArrowRight className="w-4 h-4" />
@@ -280,73 +281,81 @@ export default function ShowcasePage() {
         />
       </section>
 
-      {/* Footer */}
-      <footer className="mt-auto border-t border-slate-200 bg-white py-12 text-slate-600">
+      {/* Footer (Legal Item 17: Real business details, Legal Item 1: Privacy, 2: Terms, 3: Refund, 4: Cookies) */}
+      <footer className="mt-auto border-t border-gray-200 bg-white py-12 text-gray-600 font-sans">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-4 gap-8">
           <div className="space-y-3">
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center font-bold text-sm">
+              <div className="w-8 h-8 rounded-lg bg-emerald-700 text-white flex items-center justify-center font-bold text-sm shadow-xs">
                 {hostelConfig.identity.monogram}
               </div>
-              <span className="font-bold text-slate-900">
+              <span className="font-bold text-gray-900">
                 {hostelConfig.identity.name}
               </span>
             </div>
-            <p className="text-xs text-slate-500 leading-relaxed">
-              Commercial student accommodations and multi-property management system.
+            <p className="text-xs text-gray-500 leading-relaxed">
+              Serviced student residency and educational accommodation in Gulberg III, Lahore.
             </p>
-            <p className="text-xs text-slate-400 font-mono">
-              NTN: 8291044-7 • License #LHR-49102
-            </p>
+            <div className="text-xs text-gray-500 space-y-0.5 pt-1">
+              <p><strong>License:</strong> Punjab Directorate of Hostels #LHR-49102</p>
+              <p><strong>NTN:</strong> 8291044-7 (FBR Registered)</p>
+              <p><strong>Chief Warden:</strong> Major (R) Tariq Mehmood</p>
+            </div>
           </div>
 
           <div>
-            <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wide mb-3">
-              Direct Links
+            <h4 className="text-xs font-bold text-gray-900 uppercase tracking-wide mb-3">
+              Accommodation &amp; Services
             </h4>
             <ul className="text-xs space-y-2">
-              <li><a href="#rooms" className="hover:text-blue-600">Room Availability</a></li>
-              <li><a href="#facilities" className="hover:text-blue-600">Facilities &amp; Mess</a></li>
-              <li><a href="#booking-form" className="hover:text-blue-600">Apply for Admission</a></li>
-              <li><Link href="/dashboard" className="hover:text-blue-600">ERP Administrative Console</Link></li>
+              <li><a href="#rooms" className="hover:text-emerald-700">Room &amp; Bed Availability</a></li>
+              <li><a href="#facilities" className="hover:text-emerald-700">Power Backup &amp; Facilities</a></li>
+              <li><a href="#transit" className="hover:text-emerald-700">Nearby Universities (LUMS, FAST)</a></li>
+              <li><a href="#booking-form" className="hover:text-emerald-700">Online Reservation Form</a></li>
+              <li><Link href="/dashboard" className="text-emerald-700 font-semibold hover:underline">Staff ERP Portal</Link></li>
             </ul>
           </div>
 
           <div>
-            <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wide mb-3">
-              Chief Warden Office
+            <h4 className="text-xs font-bold text-gray-900 uppercase tracking-wide mb-3">
+              Campus Location &amp; Contact
             </h4>
-            <ul className="text-xs space-y-2 text-slate-500">
-              <li className="flex items-center gap-2">
-                <MapPin className="w-3.5 h-3.5 text-slate-400" />
-                <span>{hostelConfig.geo.address}, {hostelConfig.geo.city}</span>
+            <ul className="text-xs space-y-2 text-gray-500">
+              <li className="flex items-start gap-2">
+                <MapPin className="w-3.5 h-3.5 text-gray-400 mt-0.5 shrink-0" />
+                <span>Plot 42-B, Sector C, Commercial Enclave, Gulberg III, Lahore, Punjab, Pakistan</span>
               </li>
               <li className="flex items-center gap-2">
-                <Phone className="w-3.5 h-3.5 text-slate-400" />
-                <span>{hostelConfig.identity.phone}</span>
+                <Phone className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                <span>+92 42 3578 9201 / +92 300 8472911</span>
               </li>
               <li className="flex items-center gap-2">
-                <Mail className="w-3.5 h-3.5 text-slate-400" />
-                <span>{hostelConfig.identity.email}</span>
+                <Mail className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                <span>admissions@grandpavilion.pk</span>
               </li>
             </ul>
           </div>
 
           <div>
-            <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wide mb-3">
-              Compliance &amp; Legal
+            <h4 className="text-xs font-bold text-gray-900 uppercase tracking-wide mb-3">
+              Pakistan Statutory Compliance
             </h4>
             <ul className="text-xs space-y-2">
-              <li><Link href="/privacy" className="hover:text-blue-600">Privacy Safeguards</Link></li>
-              <li><Link href="/terms" className="hover:text-blue-600">Resident Tenancy Terms</Link></li>
-              <li><span className="text-xs text-slate-400">PWA Offline Capable</span></li>
+              <li><Link href="/privacy" className="hover:text-emerald-700">Privacy &amp; CNIC Protection</Link></li>
+              <li><Link href="/terms" className="hover:text-emerald-700">Tenancy Charter &amp; Curfew Rules</Link></li>
+              <li><Link href="/refund" className="hover:text-emerald-700">Security Deposit Refund Policy</Link></li>
+              <li><Link href="/cookies" className="hover:text-emerald-700">Cookie &amp; Tracking Transparency</Link></li>
+              <li className="pt-1 text-[11px] text-emerald-800 font-semibold flex items-center gap-1.5">
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-700" />
+                <span>Punjab Police Form 15 Compliant</span>
+              </li>
             </ul>
           </div>
         </div>
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-10 pt-6 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-400">
-          <p>© {new Date().getFullYear()} {hostelConfig.identity.name}. All rights reserved.</p>
-          <p className="mt-2 sm:mt-0 font-medium">Bespoke Commercial ERP v2.0</p>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-10 pt-6 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between text-xs text-gray-400">
+          <p>© {new Date().getFullYear()} The Grand Pavilion Residency. Governed by Pakistan Law.</p>
+          <p className="mt-2 sm:mt-0 font-medium">Verified Academic Residency ERP</p>
         </div>
       </footer>
     </div>

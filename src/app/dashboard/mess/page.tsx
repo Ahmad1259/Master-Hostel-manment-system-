@@ -91,7 +91,7 @@ export default function MessPage() {
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-200">
         <div>
-          <span className="text-xs font-semibold text-blue-600 uppercase tracking-wide">
+          <span className="text-xs font-semibold text-emerald-800 uppercase tracking-wide">
             Catering &amp; Dining Hall
           </span>
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 mt-1">

@@ -43,8 +43,8 @@ export function MotionToggle({
       disabled={disabled}
       whileTap={{ scale: 0.97 }} // Rule 4: Scale to 0.97 on press
       transition={{ duration: 0.08, ease: "linear" }} // Rule 14: Don't tween while held
-      className={`relative inline-flex h-7 w-14 shrink-0 cursor-pointer items-center rounded-full p-1 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 ${
-        checked ? "bg-blue-600" : "bg-slate-300"
+      className={`relative inline-flex h-7 w-14 shrink-0 cursor-pointer items-center rounded-full p-1 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:ring-offset-2 ${
+        checked ? "bg-emerald-700" : "bg-gray-300"
       } ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
     >
       {/* Moving Knob with Rule 5: 12% stretch while in motion */}

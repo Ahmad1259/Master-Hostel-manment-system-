@@ -1,13 +1,21 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Noto_Sans_Arabic } from "next/font/google";
+import { Cormorant_Garamond, Plus_Jakarta_Sans, Noto_Sans_Arabic } from "next/font/google";
 import "./globals.css";
 import hostelConfig from "../../hostel.config";
 import { AppProvider } from "../lib/store";
 import { CookieConsentBanner } from "../components/ui/cookie-consent-banner";
 
-const inter = Inter({
+const cormorant = Cormorant_Garamond({
+  subsets: ["latin"],
+  variable: "--font-serif",
+  weight: ["300", "400", "500", "600", "700"],
+  display: "swap",
+});
+
+const plusJakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
   variable: "--font-sans",
+  weight: ["300", "400", "500", "600", "700"],
   display: "swap",
 });
 
@@ -25,7 +33,7 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXTAUTH_URL || "https://grandpavilion.pk"),
-  title: `${hostelConfig.identity.name} | Serviced Student Hostel in ${hostelConfig.geo.city}`,
+  title: `${hostelConfig.identity.name} | Serviced Student Residency in ${hostelConfig.geo.city}`,
   description: `${hostelConfig.identity.name} provides serviced student chambers in ${hostelConfig.geo.neighborhood}, ${hostelConfig.geo.city} with 100% solar and generator power redundancy, three daily meals, and high-speed fiber internet.`,
   icons: {
     icon: "/icons/icon-192.svg",
@@ -42,7 +50,7 @@ export default function RootLayout({
     <html
       lang="en"
       dir="ltr"
-      className={`${inter.variable} ${notoArabic.variable}`}
+      className={`${cormorant.variable} ${plusJakarta.variable} ${notoArabic.variable}`}
     >
       <head>
         {/* Anti-stale service worker purge script */}

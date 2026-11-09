@@ -105,7 +105,7 @@ export default function DashboardOverviewPage() {
         </div>
       </div>
 
-      {/* 5 Core Required Metrics Grid (Rule 13: Hierarchy - Pending Dues stands out prominently) */}
+      {/* 5 Core Metrics Grid */}
       <motion.div
         variants={staggerListVariants}
         initial="hidden"
@@ -115,14 +115,12 @@ export default function DashboardOverviewPage() {
         {/* Metric 1: Total Rooms */}
         <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-xs">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
-              Total Rooms
+            <span className="text-xs font-medium text-gray-500">
+              Total rooms
             </span>
-            <div className="w-7 h-7 rounded-md bg-gray-100 text-gray-600 flex items-center justify-center">
-              <Layers className="w-3.5 h-3.5" />
-            </div>
+            <Layers className="w-4 h-4 text-gray-400" />
           </div>
-          <p className="text-2xl font-bold text-gray-900 mt-2 tabular-nums">
+          <p className="text-2xl font-semibold text-gray-900 mt-2 tabular-nums">
             {totalRooms}
           </p>
           <p className="text-xs text-gray-500 mt-1">Across {floors.length} floors</p>
@@ -131,17 +129,15 @@ export default function DashboardOverviewPage() {
         {/* Metric 2: Occupied Beds */}
         <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-xs">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
-              Occupied Beds
+            <span className="text-xs font-medium text-gray-500">
+              Occupied beds
             </span>
-            <div className="w-7 h-7 rounded-md bg-emerald-50 text-emerald-700 flex items-center justify-center">
-              <Users className="w-3.5 h-3.5" />
-            </div>
+            <Users className="w-4 h-4 text-gray-400" />
           </div>
-          <p className="text-2xl font-bold text-gray-900 mt-2 tabular-nums">
+          <p className="text-2xl font-semibold text-gray-900 mt-2 tabular-nums">
             {occupiedBeds}
           </p>
-          <p className="text-xs text-emerald-700 font-semibold mt-1">
+          <p className="text-xs text-emerald-700 font-medium mt-1">
             {occupancyRate}% occupancy rate
           </p>
         </div>
@@ -149,14 +145,12 @@ export default function DashboardOverviewPage() {
         {/* Metric 3: Vacant Beds */}
         <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-xs">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
-              Vacant Beds
+            <span className="text-xs font-medium text-gray-500">
+              Vacant beds
             </span>
-            <div className="w-7 h-7 rounded-md bg-emerald-50 text-emerald-700 flex items-center justify-center">
-              <Building2 className="w-3.5 h-3.5" />
-            </div>
+            <Building2 className="w-4 h-4 text-gray-400" />
           </div>
-          <p className="text-2xl font-bold text-emerald-700 mt-2 tabular-nums">
+          <p className="text-2xl font-semibold text-emerald-700 mt-2 tabular-nums">
             {vacantBeds}
           </p>
           <p className="text-xs text-gray-500 mt-1">Available for allotment</p>
@@ -165,34 +159,30 @@ export default function DashboardOverviewPage() {
         {/* Metric 4: Monthly Collection */}
         <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-xs">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
-              Collection (MTD)
+            <span className="text-xs font-medium text-gray-500">
+              Monthly collection
             </span>
-            <div className="w-7 h-7 rounded-md bg-gray-100 text-emerald-700 flex items-center justify-center">
-              <TrendingUp className="w-3.5 h-3.5" />
-            </div>
+            <TrendingUp className="w-4 h-4 text-gray-400" />
           </div>
-          <p className="text-2xl font-bold text-gray-900 mt-2 tabular-nums">
+          <p className="text-2xl font-semibold text-gray-900 mt-2 tabular-nums">
             {formatCurrency(monthlyCollection)}
           </p>
-          <p className="text-xs text-gray-500 mt-1">Reconciled bank &amp; cash fees</p>
+          <p className="text-xs text-gray-500 mt-1">Reconciled bank &amp; cash</p>
         </div>
 
-        {/* Metric 5: Pending Dues (RULE 13: Hierarchy Emphasis - Largest & Boldest) */}
-        <div className="bg-amber-50/70 border-2 border-amber-300 rounded-xl p-4 shadow-xs relative overflow-hidden">
+        {/* Metric 5: Pending Dues */}
+        <div className="bg-white border border-amber-200 rounded-xl p-4 shadow-xs">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-amber-900 uppercase tracking-wider flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
-              Pending Dues
+            <span className="text-xs font-medium text-amber-900 flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+              Pending dues
             </span>
-            <div className="w-7 h-7 rounded-md bg-amber-200/80 text-amber-900 flex items-center justify-center">
-              <Receipt className="w-3.5 h-3.5" />
-            </div>
+            <Receipt className="w-4 h-4 text-amber-600" />
           </div>
-          <p className="text-2xl font-black text-amber-950 mt-2 tabular-nums">
+          <p className="text-2xl font-semibold text-gray-900 mt-2 tabular-nums">
             {formatCurrency(pendingDues)}
           </p>
-          <p className="text-xs text-amber-800 font-semibold mt-1">
+          <p className="text-xs text-amber-800 font-medium mt-1">
             {unpaidInvoices.length} outstanding accounts
           </p>
         </div>
@@ -242,7 +232,7 @@ export default function DashboardOverviewPage() {
                   </div>
                   <div className="w-full bg-gray-200 h-2 rounded-full overflow-hidden">
                     <div
-                      className="bg-emerald-700 h-2 rounded-full transition-all duration-300"
+                      className="bg-emerald-700 h-2 rounded-full transition-[width] duration-300"
                       style={{ width: `${pct}%` }}
                     />
                   </div>
@@ -252,18 +242,18 @@ export default function DashboardOverviewPage() {
           </div>
         </div>
 
-        {/* Right 5 Columns: Urgent Pending Dues Action List (Rule 5 & Rule 13) */}
+        {/* Right 5 Columns: Urgent Pending Dues Action List */}
         <div className="lg:col-span-5 bg-white border border-gray-200 rounded-xl p-6 shadow-xs space-y-4 flex flex-col justify-between">
           <div className="space-y-3">
             <div className="flex items-center justify-between pb-3 border-b border-gray-100">
               <div className="flex items-center gap-2">
                 <ShieldAlert className="w-4 h-4 text-amber-600" />
                 <h2 className="text-base font-medium text-gray-900">
-                  Arrears Recovery Queue
+                  Arrears recovery queue
                 </h2>
               </div>
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800">
-                Action Required
+              <span className="text-xs font-medium text-amber-800">
+                Action required
               </span>
             </div>
 
@@ -284,13 +274,13 @@ export default function DashboardOverviewPage() {
                   </div>
 
                   <div className="flex items-center gap-3">
-                    <span className="font-mono font-bold text-amber-700 tabular-nums text-xs">
+                    <span className="font-mono font-medium text-amber-800 tabular-nums text-xs">
                       {formatCurrency(inv.balanceDues)}
                     </span>
                     <button
                       type="button"
                       onClick={() => showToast(`SMS reminder sent to ${inv.studentName} for ${formatCurrency(inv.balanceDues)}.`, "info")}
-                      className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-semibold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 rounded border border-emerald-200 transition-colors"
+                      className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-emerald-800 bg-emerald-50 hover:bg-emerald-100 rounded-md border border-emerald-200 transition-colors"
                       title="Send SMS Notice"
                     >
                       <Send className="w-3 h-3" />
@@ -304,8 +294,8 @@ export default function DashboardOverviewPage() {
 
           <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg text-xs space-y-1">
             <div className="flex items-center justify-between text-gray-700">
-              <span className="font-semibold">Police Verification (Form 15):</span>
-              <span className="text-emerald-700 font-bold">100% Compliant</span>
+              <span className="font-medium">Police verification (Form 15):</span>
+              <span className="text-emerald-700 font-medium">100% compliant</span>
             </div>
             <p className="text-[11px] text-gray-500">
               All resident CNICs logged under Punjab Information of Temporary Residents Act 2015.
@@ -319,7 +309,7 @@ export default function DashboardOverviewPage() {
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-base font-medium text-gray-900">
-              Recent Fee Ledger Activity
+              Recent fee ledger activity
             </h2>
             <p className="text-xs text-gray-500 mt-0.5">
               Latest monthly invoices and verified payment reconciliations.
@@ -327,9 +317,9 @@ export default function DashboardOverviewPage() {
           </div>
           <Link
             href="/dashboard/fees"
-            className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-700 hover:text-emerald-800"
+            className="inline-flex items-center gap-1 text-xs font-medium text-emerald-700 hover:text-emerald-800"
           >
-            <span>View Full Payment Ledger</span>
+            <span>View full ledger</span>
             <ArrowRight className="w-3.5 h-3.5" />
           </Link>
         </div>
@@ -337,12 +327,12 @@ export default function DashboardOverviewPage() {
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs border-collapse">
             <thead>
-              <tr className="bg-gray-50 border-b border-gray-200 text-gray-600 font-semibold uppercase text-[11px]">
+              <tr className="bg-gray-50/70 border-b border-gray-200 text-gray-500 font-medium text-xs">
                 <th className="px-4 py-3">Resident</th>
                 <th className="px-4 py-3">Chamber</th>
                 <th className="px-4 py-3">Period</th>
-                <th className="px-4 py-3 text-right">Rent Amount</th>
-                <th className="px-4 py-3 text-right">Balance Due</th>
+                <th className="px-4 py-3 text-right">Rent amount</th>
+                <th className="px-4 py-3 text-right">Balance due</th>
                 <th className="px-4 py-3 text-center">Status</th>
                 <th className="px-4 py-3 text-right">Action</th>
               </tr>

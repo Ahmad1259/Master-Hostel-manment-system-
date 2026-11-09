@@ -34,6 +34,7 @@ import {
   Wifi,
   WifiOff,
   Keyboard,
+  Building,
 } from "lucide-react";
 
 export default function DashboardLayout({
@@ -160,8 +161,8 @@ export default function DashboardLayout({
         <aside className="hidden lg:flex w-64 flex-col border-r border-gray-200 bg-white p-4 justify-between shrink-0 min-h-[calc(100vh-4rem)]">
           <div className="space-y-6">
             <div>
-              <p className="px-3 text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-2">
-                Operational Modules
+              <p className="px-3 text-xs font-medium text-gray-400 mb-2">
+                Operational modules
               </p>
               <nav className="space-y-1">
                 {navigation.map((item) => {
@@ -171,15 +172,15 @@ export default function DashboardLayout({
                     <Link
                       key={item.name}
                       href={item.href}
-                      className={`flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-semibold transition-colors ${
+                      className={`flex items-center gap-3 px-3 py-2 rounded-md text-xs font-medium transition-colors ${
                         isActive
-                          ? "bg-emerald-50 text-emerald-800 font-bold"
+                          ? "bg-gray-100 text-gray-900 border-l-2 border-emerald-700"
                           : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
                       }`}
                     >
                       <Icon
                         className={`w-4 h-4 ${
-                          isActive ? "text-emerald-700" : "text-gray-400"
+                          isActive ? "text-gray-900" : "text-gray-400"
                         }`}
                       />
                       <span>{item.name}</span>
@@ -190,15 +191,15 @@ export default function DashboardLayout({
             </div>
 
             {/* Quick Wizard Launcher Card */}
-            <div className="p-3 bg-gray-50 border border-gray-200 rounded-xl space-y-2">
+            <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-[11px] font-bold text-gray-900">
-                  Hostel Onboarding
+                <span className="text-xs font-medium text-gray-900">
+                  Hostel onboarding
                 </span>
-                <Sparkles className="w-3.5 h-3.5 text-emerald-700" />
+                <Building className="w-3.5 h-3.5 text-gray-400" />
               </div>
               <p className="text-[11px] text-gray-500 leading-tight">
-                Quick 3-step setup for new hostel properties &amp; student batches.
+                Setup for new hostel properties and student batches.
               </p>
               <button
                 type="button"

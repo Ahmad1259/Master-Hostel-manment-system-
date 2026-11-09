@@ -472,8 +472,8 @@ export default function LyndorShowcasePage() {
           </div>
         </section>
 
-        {/* Amenities Section (Lyndor Dark Minimalist Grid with Scroll Stagger) */}
-        <section id="amenities" className="py-24 sm:py-32 bg-[#0C0C0C] text-[#FBF8F1] overflow-hidden border-t border-[#FBF8F1]/10">
+        {/* Amenities Section (Lyndor Dark Minimalist Grid with Visible White Lines & Inner Content Stagger) */}
+        <section id="amenities" className="py-24 sm:py-32 bg-[#0C0C0C] text-[#FBF8F1] overflow-hidden border-t border-white/20">
           <div className="max-w-7xl mx-auto px-6">
             {/* Header: Appears first on scroll */}
             <motion.div
@@ -491,57 +491,44 @@ export default function LyndorShowcasePage() {
               </p>
             </motion.div>
 
-            {/* Grid of 8 items: Appears ~0.5s (half second) after header */}
-            <motion.div
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true, amount: 0.2 }}
-              variants={{
-                hidden: { opacity: 0, y: 35 },
-                visible: {
-                  opacity: 1,
-                  y: 0,
-                  transition: {
-                    delay: 0.5, // Adha second delay
-                    duration: 0.65,
-                    ease: [0.16, 1, 0.3, 1],
-                    staggerChildren: 0.07,
-                  },
-                },
-              }}
-              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 border-t border-b border-[#FBF8F1]/15"
-            >
+            {/* Static Table Grid with Clearly Visible White Borders */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 border-t border-b border-white/35">
               {amenities.map((item, idx) => {
                 const Icon = item.icon;
-                const mobileBorder = idx === 7 ? "border-b-0" : "border-b border-[#FBF8F1]/15";
-                const tabletRight = idx % 2 === 0 ? "sm:border-r sm:border-[#FBF8F1]/15" : "sm:border-r-0";
-                const tabletBottom = idx >= 6 ? "sm:border-b-0" : "sm:border-b sm:border-[#FBF8F1]/15";
-                const desktopRight = (idx + 1) % 4 !== 0 ? "lg:border-r lg:border-[#FBF8F1]/15" : "lg:border-r-0";
-                const desktopBottom = idx < 4 ? "lg:border-b lg:border-[#FBF8F1]/15" : "lg:border-b-0";
+                const mobileBorder = idx === 7 ? "border-b-0" : "border-b border-white/35";
+                const tabletRight = idx % 2 === 0 ? "sm:border-r sm:border-white/35" : "sm:border-r-0";
+                const tabletBottom = idx >= 6 ? "sm:border-b-0" : "sm:border-b sm:border-white/35";
+                const desktopRight = (idx + 1) % 4 !== 0 ? "lg:border-r lg:border-white/35" : "lg:border-r-0";
+                const desktopBottom = idx < 4 ? "lg:border-b lg:border-white/35" : "lg:border-b-0";
 
                 return (
-                  <motion.div
+                  <div
                     key={idx}
-                    variants={{
-                      hidden: { opacity: 0, y: 20 },
-                      visible: {
-                        opacity: 1,
-                        y: 0,
-                        transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] },
-                      },
-                    }}
-                    className={`py-12 sm:py-16 md:py-20 px-6 flex flex-col items-center justify-center text-center space-y-6 sm:space-y-8 min-h-[200px] sm:min-h-[230px] transition-colors hover:bg-white/[0.02] ${mobileBorder} ${tabletRight} ${tabletBottom} ${desktopRight} ${desktopBottom}`}
+                    className={`py-12 sm:py-16 md:py-20 px-6 flex flex-col items-center justify-center text-center min-h-[200px] sm:min-h-[230px] transition-colors hover:bg-white/[0.03] ${mobileBorder} ${tabletRight} ${tabletBottom} ${desktopRight} ${desktopBottom}`}
                   >
-                    <div className="text-[#FBF8F1] flex items-center justify-center">
-                      <Icon className="w-8 h-8 stroke-[1.4]" />
-                    </div>
-                    <p className="font-sans text-xs sm:text-sm text-[#FBF8F1]/85 font-light leading-relaxed max-w-[210px] mx-auto">
-                      {item.title}
-                    </p>
-                  </motion.div>
+                    {/* Inner content & icon that animates in after 0.5s */}
+                    <motion.div
+                      initial={{ opacity: 0, y: 18 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true, amount: 0.2 }}
+                      transition={{
+                        delay: 0.5 + idx * 0.06, // 0.5s delay after header + smooth stagger
+                        duration: 0.55,
+                        ease: [0.16, 1, 0.3, 1],
+                      }}
+                      className="flex flex-col items-center justify-center space-y-6 sm:space-y-8 w-full"
+                    >
+                      <div className="text-white flex items-center justify-center">
+                        <Icon className="w-8 h-8 stroke-[1.5]" />
+                      </div>
+                      <p className="font-sans text-xs sm:text-sm text-[#FBF8F1]/90 font-light leading-relaxed max-w-[210px] mx-auto text-center">
+                        {item.title}
+                      </p>
+                    </motion.div>
+                  </div>
                 );
               })}
-            </motion.div>
+            </div>
           </div>
         </section>
 

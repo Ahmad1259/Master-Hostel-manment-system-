@@ -498,59 +498,200 @@ export default function LyndorShowcasePage() {
           </div>
         </section>
 
-        {/* Scholar Stories */}
-        <section id="stories" className="py-20 bg-[#F4EFEA] border-y border-[#0C0C0C]/10">
-          <div className="max-w-7xl mx-auto px-6 space-y-10">
-            <div className="text-center space-y-1">
-              <span className="text-xs text-[#5D6C7B]">
-                Resident feedback
-              </span>
-              <h2 className="font-serif text-3xl sm:text-4xl font-normal text-[#0C0C0C]">
-                Scholar stories
-              </h2>
-            </div>
+        {/* Scholar Stories / Resident Reviews (Dual Marquee with Side Blur) */}
+        <section id="stories" className="py-24 bg-[#F4EFEA] border-y border-[#0C0C0C]/10 overflow-hidden relative">
+          <div className="max-w-7xl mx-auto px-6 mb-12 text-center space-y-2">
+            <span className="text-xs text-[#5D6C7B] tracking-wide">
+              Resident experiences
+            </span>
+            <h2 className="font-serif text-3xl sm:text-5xl font-light text-[#0C0C0C]">
+              Stories from our scholars
+            </h2>
+            <p className="text-xs sm:text-sm text-[#5D6C7B] max-w-md mx-auto">
+              Authentic reflections from university residents and visiting fellows who call Grand Pavilion home.
+            </p>
+          </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {[
-                {
-                  quote: "Having 24-hour uninterrupted solar power with zero flicker during FAST final project evaluations made all the difference.",
-                  author: "Muhammad Hamza",
-                  uni: "FAST-NUCES • BS Computer Science",
-                  room: "Room 101",
-                },
-                {
-                  quote: "The quiet environment, high-speed fiber internet, and clean meals made shifting from Multan to Lahore straightforward.",
-                  author: "Ali Raza",
-                  uni: "LUMS • Undergraduate Economics",
-                  room: "Room 204 • Bed 2",
-                },
-                {
-                  quote: "From monthly WhatsApp receipts to turnstile security, the management is organized and transparent.",
-                  author: "Shahmir Ali Khan",
-                  uni: "FC College • Pre-Medical Fellow",
-                  room: "Room 102",
-                },
-              ].map((t, idx) => (
-                <div
-                  key={idx}
-                  className="bg-[#FBF8F1] border border-[#0C0C0C]/10 p-6 rounded-lg space-y-4 flex flex-col justify-between"
-                >
-                  <p className="font-serif text-base text-[#0C0C0C] font-normal leading-relaxed">
-                    &ldquo;{t.quote}&rdquo;
-                  </p>
-                  <div className="pt-3 border-t border-[#0C0C0C]/10 space-y-0.5">
-                    <div className="text-xs font-medium text-[#0C0C0C]">
+          {/* Marquee Carousel Container with Side Blur / Fade Effect */}
+          <div className="relative w-full overflow-hidden space-y-6">
+            {/* Left & Right Edge Blur and Gradient Overlays */}
+            <div
+              className="pointer-events-none absolute left-0 top-0 bottom-0 w-24 sm:w-44 md:w-64 z-20 bg-gradient-to-r from-[#F4EFEA] via-[#F4EFEA]/85 to-transparent backdrop-blur-[3px]"
+              aria-hidden="true"
+            />
+            <div
+              className="pointer-events-none absolute right-0 top-0 bottom-0 w-24 sm:w-44 md:w-64 z-20 bg-gradient-to-l from-[#F4EFEA] via-[#F4EFEA]/85 to-transparent backdrop-blur-[3px]"
+              aria-hidden="true"
+            />
+
+            {/* Row 1: Moves Right to Left */}
+            <div className="overflow-hidden w-full flex">
+              <div className="animate-marquee-left flex gap-6 px-3">
+                {[
+                  {
+                    quote: "Private, peaceful, and effortless. We spent every evening in the study courtyard just... existing.",
+                    author: "Alisha K.",
+                  },
+                  {
+                    quote: "It's rare to find a place that feels designed for slowing down and deep focus. Grand Pavilion understood exactly what we needed.",
+                    author: "Daniel W.",
+                  },
+                  {
+                    quote: "We planned to explore the area every weekend. Instead, we stayed inside with uninterrupted solar power. Zero regrets.",
+                    author: "Rafael G.",
+                  },
+                  {
+                    quote: "It didn't feel like a rental or student hostel. It felt like our own private retreat — even during FAST finals week.",
+                    author: "Sofia P.",
+                  },
+                  {
+                    quote: "The quiet environment and high-speed fiber internet made completing my economics thesis straightforward and stress-free.",
+                    author: "Ali Raza",
+                  },
+                  {
+                    quote: "The management is calm, courteous, and transparent. Every WhatsApp inquiry was handled within minutes.",
+                    author: "Taimur M.",
+                  },
+                  // Duplicated for seamless infinite ticker
+                  {
+                    quote: "Private, peaceful, and effortless. We spent every evening in the study courtyard just... existing.",
+                    author: "Alisha K.",
+                  },
+                  {
+                    quote: "It's rare to find a place that feels designed for slowing down and deep focus. Grand Pavilion understood exactly what we needed.",
+                    author: "Daniel W.",
+                  },
+                  {
+                    quote: "We planned to explore the area every weekend. Instead, we stayed inside with uninterrupted solar power. Zero regrets.",
+                    author: "Rafael G.",
+                  },
+                  {
+                    quote: "It didn't feel like a rental or student hostel. It felt like our own private retreat — even during FAST finals week.",
+                    author: "Sofia P.",
+                  },
+                  {
+                    quote: "The quiet environment and high-speed fiber internet made completing my economics thesis straightforward and stress-free.",
+                    author: "Ali Raza",
+                  },
+                  {
+                    quote: "The management is calm, courteous, and transparent. Every WhatsApp inquiry was handled within minutes.",
+                    author: "Taimur M.",
+                  },
+                ].map((t, idx) => (
+                  <div
+                    key={`r1-${idx}`}
+                    className="w-[320px] sm:w-[390px] h-[230px] sm:h-[250px] p-7 sm:p-8 rounded-xl sm:rounded-2xl bg-[#EAE4DC] border border-[#0C0C0C]/5 flex flex-col justify-between items-center text-center shrink-0 select-none shadow-[0_2px_8px_rgba(0,0,0,0.02)] transition-colors hover:border-[#0C0C0C]/15"
+                  >
+                    {/* 5 Stars at top center */}
+                    <div className="flex items-center justify-center gap-1.5 text-[#0C0C0C]">
+                      {[...Array(5)].map((_, sIdx) => (
+                        <svg
+                          key={sIdx}
+                          className="w-3.5 h-3.5 fill-current"
+                          viewBox="0 0 20 20"
+                        >
+                          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                        </svg>
+                      ))}
+                    </div>
+
+                    {/* Quote text */}
+                    <p className="font-sans text-[14px] sm:text-[15px] text-[#1F1F1F] font-light leading-[1.65] text-center max-w-xs sm:max-w-sm">
+                      &ldquo;{t.quote}&rdquo;
+                    </p>
+
+                    {/* Author in elegant serif */}
+                    <div className="font-serif text-xl sm:text-2xl text-[#0C0C0C] font-normal tracking-wide text-center">
                       {t.author}
                     </div>
-                    <div className="text-[11px] text-[#5D6C7B]">
-                      {t.uni}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Row 2: Moves Left to Right */}
+            <div className="overflow-hidden w-full flex">
+              <div className="animate-marquee-right flex gap-6 px-3">
+                {[
+                  {
+                    quote: "From monthly WhatsApp ledger receipts to PFA-A food hygiene, the transparency here is unprecedented.",
+                    author: "Hamza M.",
+                  },
+                  {
+                    quote: "Form 15 Punjab Police tenant verification was executed seamlessly on day one. Total security and peace of mind.",
+                    author: "Fatima Z.",
+                  },
+                  {
+                    quote: "Solid wood desks, natural lighting, and respectful fellow scholars. The best academic residency in Gulberg.",
+                    author: "Usman G.",
+                  },
+                  {
+                    quote: "Nutritious, hot home-style meals served punctually every single evening. You genuinely feel cared for here.",
+                    author: "Ayesha N.",
+                  },
+                  {
+                    quote: "Zero generator noise, 100% solar redundancy, and pristine private washrooms with instant hot water.",
+                    author: "Bilal K.",
+                  },
+                  {
+                    quote: "Coming from Multan to Lahore for LUMS was daunting. Grand Pavilion made the transition completely effortless.",
+                    author: "Shahmir Ali",
+                  },
+                  // Duplicated for seamless infinite ticker
+                  {
+                    quote: "From monthly WhatsApp ledger receipts to PFA-A food hygiene, the transparency here is unprecedented.",
+                    author: "Hamza M.",
+                  },
+                  {
+                    quote: "Form 15 Punjab Police tenant verification was executed seamlessly on day one. Total security and peace of mind.",
+                    author: "Fatima Z.",
+                  },
+                  {
+                    quote: "Solid wood desks, natural lighting, and respectful fellow scholars. The best academic residency in Gulberg.",
+                    author: "Usman G.",
+                  },
+                  {
+                    quote: "Nutritious, hot home-style meals served punctually every single evening. You genuinely feel cared for here.",
+                    author: "Ayesha N.",
+                  },
+                  {
+                    quote: "Zero generator noise, 100% solar redundancy, and pristine private washrooms with instant hot water.",
+                    author: "Bilal K.",
+                  },
+                  {
+                    quote: "Coming from Multan to Lahore for LUMS was daunting. Grand Pavilion made the transition completely effortless.",
+                    author: "Shahmir Ali",
+                  },
+                ].map((t, idx) => (
+                  <div
+                    key={`r2-${idx}`}
+                    className="w-[320px] sm:w-[390px] h-[230px] sm:h-[250px] p-7 sm:p-8 rounded-xl sm:rounded-2xl bg-[#EAE4DC] border border-[#0C0C0C]/5 flex flex-col justify-between items-center text-center shrink-0 select-none shadow-[0_2px_8px_rgba(0,0,0,0.02)] transition-colors hover:border-[#0C0C0C]/15"
+                  >
+                    {/* 5 Stars at top center */}
+                    <div className="flex items-center justify-center gap-1.5 text-[#0C0C0C]">
+                      {[...Array(5)].map((_, sIdx) => (
+                        <svg
+                          key={sIdx}
+                          className="w-3.5 h-3.5 fill-current"
+                          viewBox="0 0 20 20"
+                        >
+                          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                        </svg>
+                      ))}
                     </div>
-                    <div className="text-[11px] text-emerald-800 font-medium">
-                      {t.room}
+
+                    {/* Quote text */}
+                    <p className="font-sans text-[14px] sm:text-[15px] text-[#1F1F1F] font-light leading-[1.65] text-center max-w-xs sm:max-w-sm">
+                      &ldquo;{t.quote}&rdquo;
+                    </p>
+
+                    {/* Author in elegant serif */}
+                    <div className="font-serif text-xl sm:text-2xl text-[#0C0C0C] font-normal tracking-wide text-center">
+                      {t.author}
                     </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </div>
         </section>

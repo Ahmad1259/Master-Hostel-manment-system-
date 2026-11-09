@@ -19,6 +19,11 @@ import {
   CheckCircle2,
   ExternalLink,
   ShieldCheck,
+  Sun,
+  Sofa,
+  Snowflake,
+  Car,
+  Briefcase,
 } from "lucide-react";
 
 export default function LyndorShowcasePage() {
@@ -85,34 +90,40 @@ export default function LyndorShowcasePage() {
 
   const amenities = [
     {
-      icon: Zap,
-      title: "100% Uninterrupted power",
-      description: "Tier-1 solar array with 65 kVA Perkins generator backup. Zero outages during exam weeks.",
+      icon: Sun,
+      title: "100% solar backup with zero load-shedding.",
     },
     {
-      icon: Utensils,
-      title: "PFA-Certified dining",
-      description: "Three home-cooked meals prepared daily in a Punjab Food Authority inspected kitchen.",
+      icon: ({ className = "w-8 h-8" }: { className?: string }) => (
+        <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.4">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 2.5v2m-3.5-2v2m7-2v2M4 8.5h16M5.5 8.5v8.5a2 2 0 002 2h9a2 2 0 002-2V8.5M2 10.5h2m16 0h2" />
+        </svg>
+      ),
+      title: "Modern kitchen with complete essentials.",
+    },
+    {
+      icon: Sofa,
+      title: "Open-air seating for easy living.",
     },
     {
       icon: Wifi,
-      title: "Gigabit fiber internet",
-      description: "Redundant dual-ISP connections with 100 Mbps per floor for coursework and research.",
+      title: "Fast, reliable connection throughout.",
+    },
+    {
+      icon: Snowflake,
+      title: "Cool, comfortable rooms all day.",
+    },
+    {
+      icon: Car,
+      title: "Secure on-site parking available.",
+    },
+    {
+      icon: Briefcase,
+      title: "Quiet workspace for focused time.",
     },
     {
       icon: ShieldCheck,
-      title: "Form 15 police verification",
-      description: "Mandatory tenant background registration with the local station under Punjab Act 2015.",
-    },
-    {
-      icon: Building,
-      title: "Housekeeping & laundry",
-      description: "Daily chamber cleaning, waste disposal, and scheduled laundry service managed via portal.",
-    },
-    {
-      icon: Lock,
-      title: "Curfew & access control",
-      description: "22:30 gate curfew, biometric entry log, and night warden supervision.",
+      title: "24/7 biometric security & CCTV surveillance.",
     },
   ];
 
@@ -461,40 +472,76 @@ export default function LyndorShowcasePage() {
           </div>
         </section>
 
-        {/* Amenities Section */}
-        <section id="amenities" className="py-20 px-6 max-w-7xl mx-auto space-y-12">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-[#0C0C0C]/10 pb-6">
-            <div className="space-y-1">
-              <span className="text-xs text-[#5D6C7B]">
-                Facilities
-              </span>
-              <p className="text-xs text-[#5D6C7B]">
-                Infrastructure included in standard residency.
+        {/* Amenities Section (Lyndor Dark Minimalist Grid with Scroll Stagger) */}
+        <section id="amenities" className="py-24 sm:py-32 bg-[#0C0C0C] text-[#FBF8F1] overflow-hidden border-t border-[#FBF8F1]/10">
+          <div className="max-w-7xl mx-auto px-6">
+            {/* Header: Appears first on scroll */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.25 }}
+              transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
+              className="text-center mb-16 sm:mb-20 space-y-3"
+            >
+              <h2 className="font-serif text-4xl sm:text-6xl md:text-7xl font-light uppercase tracking-[0.2em] sm:tracking-[0.25em] text-[#FBF8F1]">
+                Amenities
+              </h2>
+              <p className="font-sans text-xs sm:text-sm text-[#FBF8F1]/65 font-light tracking-wide max-w-md mx-auto">
+                Thoughtfully selected essentials to enhance your stay.
               </p>
-            </div>
-            <h2 className="font-serif text-4xl sm:text-6xl font-normal text-[#0C0C0C]">
-              Amenities
-            </h2>
-          </div>
+            </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {amenities.map((item, idx) => {
-              const Icon = item.icon;
-              return (
-                <div
-                  key={idx}
-                  className="border border-[#0C0C0C]/10 bg-white p-6 rounded-lg space-y-3"
-                >
-                  <Icon className="w-5 h-5 text-gray-700" />
-                  <h3 className="font-serif text-lg font-normal text-[#0C0C0C]">
-                    {item.title}
-                  </h3>
-                  <p className="text-xs text-[#5D6C7B] leading-relaxed">
-                    {item.description}
-                  </p>
-                </div>
-              );
-            })}
+            {/* Grid of 8 items: Appears ~0.5s (half second) after header */}
+            <motion.div
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, amount: 0.2 }}
+              variants={{
+                hidden: { opacity: 0, y: 35 },
+                visible: {
+                  opacity: 1,
+                  y: 0,
+                  transition: {
+                    delay: 0.5, // Adha second delay
+                    duration: 0.65,
+                    ease: [0.16, 1, 0.3, 1],
+                    staggerChildren: 0.07,
+                  },
+                },
+              }}
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 border-t border-b border-[#FBF8F1]/15"
+            >
+              {amenities.map((item, idx) => {
+                const Icon = item.icon;
+                const mobileBorder = idx === 7 ? "border-b-0" : "border-b border-[#FBF8F1]/15";
+                const tabletRight = idx % 2 === 0 ? "sm:border-r sm:border-[#FBF8F1]/15" : "sm:border-r-0";
+                const tabletBottom = idx >= 6 ? "sm:border-b-0" : "sm:border-b sm:border-[#FBF8F1]/15";
+                const desktopRight = (idx + 1) % 4 !== 0 ? "lg:border-r lg:border-[#FBF8F1]/15" : "lg:border-r-0";
+                const desktopBottom = idx < 4 ? "lg:border-b lg:border-[#FBF8F1]/15" : "lg:border-b-0";
+
+                return (
+                  <motion.div
+                    key={idx}
+                    variants={{
+                      hidden: { opacity: 0, y: 20 },
+                      visible: {
+                        opacity: 1,
+                        y: 0,
+                        transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] },
+                      },
+                    }}
+                    className={`py-12 sm:py-16 md:py-20 px-6 flex flex-col items-center justify-center text-center space-y-6 sm:space-y-8 min-h-[200px] sm:min-h-[230px] transition-colors hover:bg-white/[0.02] ${mobileBorder} ${tabletRight} ${tabletBottom} ${desktopRight} ${desktopBottom}`}
+                  >
+                    <div className="text-[#FBF8F1] flex items-center justify-center">
+                      <Icon className="w-8 h-8 stroke-[1.4]" />
+                    </div>
+                    <p className="font-sans text-xs sm:text-sm text-[#FBF8F1]/85 font-light leading-relaxed max-w-[210px] mx-auto">
+                      {item.title}
+                    </p>
+                  </motion.div>
+                );
+              })}
+            </motion.div>
           </div>
         </section>
 
